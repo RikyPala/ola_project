@@ -8,7 +8,7 @@ n_products = 5
 n_arms = 4
 T = 300
 n_experiments = 1000
-rewards_per_experiment = []
+rewards_per_experiment = np.empty((n_experiments, n_products, T))
 
 probabilities = np.array([[0.15, 0.10, 0.10, 0.35],
                           [0.10, 0.15, 0.35, 0.10],
@@ -28,12 +28,12 @@ for e in tqdm(range(n_experiments)):
         rewards = env.round(pulled_arms)
         gr_learner.update(pulled_arms, rewards)
 
-    rewards_per_experiment.append(gr_learner.collected_rewards)
+    rewards_per_experiment[e, :, :] = np.array(gr_learner.collected_rewards)
 
 plt.figure(0)
 plt.xlabel("t")
 plt.ylabel("Regret")
 colors = ['g', 'b', 'r', 'y', 'm']
 for i in range(n_products):
-    plt.plot(np.cumsum(np.mean(optimals[i] - rewards_per_experiment[i], axis=0)), colors[i])
+    plt.plot(np.cumsum(np.mean(optimals[i] - rewards_per_experiment[:, i], axis=0)), colors[i])
 plt.show()

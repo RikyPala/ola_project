@@ -4,23 +4,16 @@ from matplotlib import pyplot as plt
 from Environment import Environment
 from Learner import Learner
 
-n_products = 5
-n_arms = 4
+T = 300
+n_experiments = 100
 
 rewards_per_experiment = []
 
-probabilities = np.array([[0.15, 0.10, 0.10, 0.35],
-                          [0.10, 0.15, 0.35, 0.10],
-                          [0.35, 0.10, 0.15, 0.10],
-                          [0.15, 0.35, 0.10, 0.10],
-                          [0.35, 0.10, 0.10, 0.15]])
-
-optimals = np.amax(probabilities, axis=1)
 
 for e in tqdm(range(n_experiments)):
 
     env = Environment()
-    learner = Learner(n_products, n_arms)
+    learner = Learner(env.n_products, env.n_arms, env.n_user_types)
 
     for t in range(0, T):
         pulled_arms = learner.pull_arm()

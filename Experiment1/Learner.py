@@ -1,12 +1,21 @@
-from Learner import *
+import numpy as np
 
 
-class Learner1(Learner):
+class Learner:
 
     def __init__(self, n_products, n_arms):
-        super().__init__(n_products, n_arms)
+        self.n_products = n_products
+        self.n_arms = n_arms
+        self.t = 0
+        self.rewards_per_arm = [[[] for _ in range(self.n_arms)] for _ in range(self.n_products)]
+        self.collected_rewards = [[] for _ in range(self.n_products)]
         self.expected_rewards = np.zeros((n_products, n_arms))
         self.counters = np.zeros(self.n_products, dtype=int)
+
+    def update_observations(self, pulled_arms, rewards):
+        for i in range(self.n_products):
+            self.rewards_per_arm[i][pulled_arms[i]].append(rewards[i])
+            self.collected_rewards[i].append(rewards[i])
 
     def pull_arm(self):
         mask = self.counters < self.n_arms - 1

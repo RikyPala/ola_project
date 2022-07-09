@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from Environment import Environment
 from Learner import Learner
 
-n_experiments = 100
+n_experiments = 1000
 
 rewards_per_experiment = []
 best_arms_per_experiment = []
@@ -14,11 +14,12 @@ for e in tqdm(range(n_experiments)):
 
     learner = Learner(env.n_products, env.n_arms, env.n_user_types)
 
-    best_arms = learner.pull_arm()
+    best_arms = learner.pull_arms()
     rewards = env.round(best_arms)
+    learner.update(best_arms, rewards)
 
     while True:
-        pulled_arms = learner.pull_arm()
+        pulled_arms = learner.pull_arms()
         rewards = env.round(pulled_arms)
         stop = learner.update(pulled_arms, rewards)
         if stop == 1:

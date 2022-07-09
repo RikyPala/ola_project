@@ -14,7 +14,7 @@ class Learner:
 
         self.counters = np.zeros(self.n_products, dtype=int)
 
-    def pull_arm(self):
+    def pull_arms(self):
 
         mask = self.counters < self.n_arms - 1
         choice = np.random.choice(np.arange(self.n_products)[mask])

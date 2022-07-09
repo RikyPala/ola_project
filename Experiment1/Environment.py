@@ -29,6 +29,30 @@ class Environment:
             0.25  # user_type == 2
         ])
 
+        self.demand_curves = np.array([  # [price == 10, price == 20, price == 30, price == 40]
+            [
+                [0.80, 0.70, 0.65, 0.30],  # product_type == 0
+                [0.70, 0.65, 0.40, 0.30],  # product_type == 1
+                [0.65, 0.60, 0.55, 0.45],  # product_type == 2
+                [0.75, 0.70, 0.65, 0.30],  # product_type == 3
+                [0.50, 0.40, 0.35, 0.30]   # product_type == 4
+            ],  # user_type == 0
+            [
+                [0.75, 0.65, 0.50, 0.30],  # product_type == 0
+                [0.65, 0.60, 0.50, 0.25],  # product_type == 1
+                [0.80, 0.70, 0.65, 0.50],  # product_type == 2
+                [0.70, 0.65, 0.45, 0.40],  # product_type == 3
+                [0.55, 0.50, 0.30, 0.25]   # product_type == 4
+            ],  # user_type == 1
+            [
+                [0.90, 0.65, 0.55, 0.50],  # product_type == 0
+                [0.75, 0.60, 0.55, 0.40],  # product_type == 1
+                [0.60, 0.30, 0.25, 0.20],  # product_type == 2
+                [0.50, 0.40, 0.30, 0.25],  # product_type == 3
+                [0.65, 0.30, 0.25, 0.10]   # product_type == 4
+            ]  # user_type == 2
+        ])
+
         self.products_sold = np.array([
             # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
             [40, 55, 50, 20, 50],  # user_type == 0

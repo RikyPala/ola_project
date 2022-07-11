@@ -14,28 +14,5 @@ class Learner:
 
         self.counters = np.zeros(self.n_products, dtype=int)
 
-    def pull_arm(self):
-
-        mask = self.counters < self.n_arms - 1
-        choice = np.random.choice(np.arange(self.n_products)[mask])
-        self.counters[choice] += 1
-        pulled_arms = self.counters
-        return pulled_arms
-
-    def update(self, pulled_arms, rewards):
-
-        if np.shape(self.collected_rewards)[-1] == 0:
-            improvements = True
-        else:
-            improvements = any(rewards > np.array([elem[-1] for elem in self.collected_rewards]))
-
-        for i in range(self.n_products):
-            self.rewards_per_arm[i][pulled_arms[i]].append(rewards[i])
-            self.collected_rewards[i].append(rewards[i])
-
-        if not improvements:
-            return 1
-        elif all(self.counters == self.n_arms - 1):
-            return 2
-        else:
-            return 0
+    def update_observations(self, pulled_arms, rewards):
+        pass

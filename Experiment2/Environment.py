@@ -11,55 +11,62 @@ class Environment:
         self.n_arms = 4
         self.n_user_types = 3
 
-        self.prices = [10, 20, 30, 40]
+        # REWARDS VARIABLES
+        self.prices = np.array([10, 20, 30, 40])
+        self.daily_users_ratios = np.array([0.40, 0.35, 0.25])
+        self.conversion_rates = np.array([
+            [
+                [0.80, 0.75, 0.90],
+                [0.70, 0.65, 0.75],
+                [0.65, 0.80, 0.60],
+                [0.75, 0.70, 0.50],
+                [0.50, 0.55, 0.65]
+            ],
+            [
+                [0.70, 0.65, 0.65],
+                [0.65, 0.60, 0.60],
+                [0.60, 0.70, 0.30],
+                [0.70, 0.65, 0.40],
+                [0.40, 0.50, 0.30]
+            ],
+            [
+                [0.65, 0.50, 0.55],
+                [0.40, 0.40, 0.45],
+                [0.45, 0.40, 0.25],
+                [0.45, 0.35, 0.30],
+                [0.35, 0.30, 0.25]
+            ],
+            [
+                [0.30, 0.30, 0.50],
+                [0.30, 0.25, 0.40],
+                [0.35, 0.30, 0.20],
+                [0.20, 0.30, 0.25],
+                [0.30, 0.25, 0.10]
+            ]
+        ])
+        self.max_products_sold = np.array([
+            [40, 30, 20],
+            [55, 35, 40],
+            [50, 20, 60],
+            [20, 40, 30],
+            [50, 40, 50]
+        ])
 
+        expected_purchases = self.daily_users_ratios * self.conversion_rates * (self.max_products_sold / 2)
+        expected_purchases = np.sum(expected_purchases, axis=2).T
+        expected_rewards = expected_purchases * self.prices
+
+        self.optimals = np.max(expected_rewards, axis=1)
+
+        # GRAPH VARIABLES
         self.lambda_p = 0.8
-
         self.alpha_ratios = np.array([
             # [product_type == 0, product_type == 1, product_type == 2,
             #  product_type == 3, product_type == 4, competitor_page]
-            [0.10, 0.15, 0.05, 0.30, 0.10, 0.30],  # user_type == 0
+            [0.10, 0.15, 0.05, 0.15, 0.10, 0.45],  # user_type == 0
             [0.05, 0.10, 0.20, 0.20, 0.20, 0.25],  # user_type == 1
-            [0.15, 0.05, 0.15, 0.35, 0.10, 0.20]  # user_type == 2
+            [0.15, 0.10, 0.15, 0.15, 0.10, 0.35]  # user_type == 2
         ])
-
-        self.daily_users_ratios = np.array([
-            0.40,  # user_type == 0
-            0.35,  # user_type == 1
-            0.25  # user_type == 2
-        ])
-
-        self.demand_curves = np.array([  # [price == 10, price == 20, price == 30, price == 40]
-            [
-                [0.80, 0.70, 0.65, 0.30],  # product_type == 0
-                [0.70, 0.65, 0.40, 0.30],  # product_type == 1
-                [0.65, 0.60, 0.55, 0.45],  # product_type == 2
-                [0.75, 0.70, 0.65, 0.30],  # product_type == 3
-                [0.50, 0.40, 0.35, 0.30]   # product_type == 4
-            ],  # user_type == 0
-            [
-                [0.75, 0.65, 0.50, 0.30],  # product_type == 0
-                [0.65, 0.60, 0.50, 0.25],  # product_type == 1
-                [0.80, 0.70, 0.65, 0.50],  # product_type == 2
-                [0.70, 0.65, 0.45, 0.40],  # product_type == 3
-                [0.55, 0.50, 0.30, 0.25]   # product_type == 4
-            ],  # user_type == 1
-            [
-                [0.90, 0.65, 0.55, 0.50],  # product_type == 0
-                [0.75, 0.60, 0.55, 0.40],  # product_type == 1
-                [0.60, 0.30, 0.25, 0.20],  # product_type == 2
-                [0.50, 0.40, 0.30, 0.25],  # product_type == 3
-                [0.65, 0.30, 0.25, 0.10]   # product_type == 4
-            ]  # user_type == 2
-        ])
-
-        self.products_sold = np.array([
-            # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
-            [40, 55, 50, 20, 50],  # user_type == 0
-            [30, 80, 20, 25, 40],  # user_type == 1
-            [20, 40, 70, 60, 50]   # user_type == 2
-        ])
-
         self.graph_probabilities = np.array([
             # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
             [0, 0.40, 0.35, 0.40, 0.10],  # product_type == 0
@@ -68,7 +75,6 @@ class Environment:
             [0.10, 0.05, 0.20, 0, 0.15],  # product_type == 3
             [0.10, 0.30, 0.25, 0.10, 0]  # product_type == 4
         ])
-
         self.secondaries = np.array([
             [4, 2],  # product_type == 0
             [0, 2],  # product_type == 1
@@ -86,8 +92,6 @@ class Environment:
         for (user_type, product) in itertools.product(range(self.n_user_types), range(self.n_products)):
 
             for user in range(round(daily_users * self.daily_users_ratios[user_type] * self.alpha_ratios[user_type, product])):
-                # TODO: Eventually implement reservation ranges basing on user_type
-                reservation_price = np.random.randint(0, 50)
 
                 visited = []
                 to_visit = [product]
@@ -97,13 +101,13 @@ class Environment:
                     visited.append(current_product)
 
                     product_price = self.prices[pulled_arms[current_product]]
-                    if product_price > reservation_price:
+
+                    buy = np.random.binomial(1, self.conversion_rates[pulled_arms[current_product], current_product, user_type])
+                    if not buy:
                         continue
-                    rewards[current_product] += (
-                            product_price *
-                            self.products_sold[user_type, current_product] *
-                            self.demand_curves[user_type, current_product, pulled_arms[current_product]]
-                    )
+
+                    products_sold = np.random.randint(0, self.max_products_sold[current_product, user_type])
+                    rewards[current_product] += product_price * products_sold
 
                     secondary_1 = self.secondaries[current_product, 0]
                     success_1 = np.random.binomial(1, self.graph_probabilities[current_product, secondary_1])
@@ -115,4 +119,4 @@ class Environment:
                     if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                         to_visit.append(secondary_2)
 
-        return rewards
+        return rewards / daily_users

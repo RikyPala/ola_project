@@ -37,6 +37,9 @@ plt.ylabel("Rewards")
 plt.figure(1)
 plt.xlabel("t")
 plt.ylabel("Cumulative Rewards")
+plt.figure(2)
+plt.xlabel("t")
+plt.ylabel("Cumulative Regrets")
 
 colors = ['g', 'b', 'r', 'y', 'm']
 
@@ -45,12 +48,23 @@ for i in range(env.n_products):
     max_horizon = max([len(elem) for elem in product_experiments])
     horizon = max_horizon
     mean_rewards_per_horizon = []
-    #mean_regrets_per_horizon = []
+    mean_regrets_per_horizon = []
     for t in range(max_horizon):
         mean_rewards_per_horizon.append(np.mean([elem[t] for elem in product_experiments if len(elem) > t]))
-        #mean_regrets_per_horizon.append(np.mean([optimals[i] - elem[t] for elem in product_experiments if len(elem) > t]))
+        mean_regrets_per_horizon.append(np.mean([env.optimals[i] - elem[t] for elem in product_experiments if len(elem) > t]))
     plt.figure(0)
-    plt.plot(mean_rewards_per_horizon, colors[i])
+    ax, = plt.plot(mean_rewards_per_horizon, colors[i])
+    ax.set_label('Product ' + str(i+1))
     plt.figure(1)
-    plt.plot(np.cumsum(mean_rewards_per_horizon), colors[i])
+    ax, = plt.plot(np.cumsum(mean_rewards_per_horizon), colors[i])
+    ax.set_label('Product ' + str(i+1))
+    plt.figure(2)
+    ax, = plt.plot(np.cumsum(mean_regrets_per_horizon), colors[i])
+    ax.set_label('Product ' + str(i+1))
+plt.figure(0)
+plt.legend()
+plt.figure(1)
+plt.legend()
+plt.figure(2)
+plt.legend()
 plt.show()

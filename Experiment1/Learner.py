@@ -33,9 +33,6 @@ class Learner:
             self.rewards_per_arm[i][pulled_arms[i]].append(rewards[i])
             self.collected_rewards[i].append(rewards[i])
 
-        if not improvements:
-            return 1
-        elif all(self.counters == self.n_arms - 1):
-            return 2
-        else:
-            return 0
+        stop = not improvements or all(self.counters == self.n_arms - 1)
+
+        return stop

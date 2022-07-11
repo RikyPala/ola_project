@@ -14,21 +14,13 @@ for e in tqdm(range(n_experiments)):
 
     learner = Learner(env.n_products, env.n_arms, env.n_user_types)
 
-    best_arms = learner.pull_arms()
-    rewards = env.round(best_arms)
-    learner.update(best_arms, rewards)
-
     while True:
         pulled_arms = learner.pull_arms()
         rewards = env.round(pulled_arms)
         stop = learner.update(pulled_arms, rewards)
-        if stop == 1:
-            break
-        best_arms = pulled_arms
-        if stop == 2:
+        if stop:
             break
 
-    best_arms_per_experiment.append(best_arms)
     rewards_per_experiment.append(learner.collected_rewards)
 
 plt.figure(0)

@@ -7,7 +7,6 @@ from Learner import Learner
 n_experiments = 1000
 
 rewards_per_experiment = []
-best_arms_per_experiment = []
 env = Environment()
 
 for e in tqdm(range(n_experiments)):

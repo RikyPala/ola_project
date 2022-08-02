@@ -2,34 +2,34 @@ import numpy as np
 from tqdm.auto import tqdm
 from matplotlib import pyplot as plt
 from Environment import Environment
-from Learner import Learner
+from Experiment2.TS import TS
+from Experiment2.UCB import UCB
 
-n_experiments = 1000
+n_experiments = 100
+T = 20
 
-rewards_per_experiment = []
-best_arms_per_experiment = []
 env = Environment()
+
+ts_rewards_per_experiment = []
+ucb_rewards_per_experiment = []
 
 for e in tqdm(range(n_experiments)):
 
-    learner = Learner(env.n_products, env.n_arms, env.n_user_types)
+    ts_learner = TS(env.n_products, env.n_arms, env.n_user_types)
+    # ucb_learner = UCB(env.n_products, env.n_arms, env.n_user_types)
 
-    best_arms = learner.pull_arms()
-    rewards = env.round(best_arms)
-    learner.update(best_arms, rewards)
+    for t in range(T):
 
-    while True:
-        pulled_arms = learner.pull_arms()
-        rewards = env.round(pulled_arms)
-        stop = learner.update(pulled_arms, rewards)
-        if stop == 1:
-            break
-        best_arms = pulled_arms
-        if stop == 2:
-            break
+        ts_pulled_arms = ts_learner.pull_arms()
+        rewards = env.round(ts_pulled_arms)
+        ts_learner.update(ts_pulled_arms, rewards)
 
-    best_arms_per_experiment.append(best_arms)
-    rewards_per_experiment.append(learner.collected_rewards)
+        # ucb_pulled_arms = ucb_learner.pull_arms()
+        # ucb_rewards = env.round(ucb_pulled_arms)
+        # ucb_learner.update(ucb_pulled_arms, rewards)
+
+    ts_rewards_per_experiment.append(ts_learner.collected_rewards)
+    # ucb_rewards_per_experiment.append(ucb_learner.collected_rewards)
 
 plt.figure(0)
 plt.xlabel("t")
@@ -43,23 +43,20 @@ plt.ylabel("Cumulative Regrets")
 
 colors = ['g', 'b', 'r', 'y', 'm']
 
+# TODO: fix plots
 for i in range(env.n_products):
-    product_experiments = [elem[i] for elem in rewards_per_experiment]
-    max_horizon = max([len(elem) for elem in product_experiments])
-    horizon = max_horizon
-    mean_rewards_per_horizon = []
-    mean_regrets_per_horizon = []
-    for t in range(max_horizon):
-        mean_rewards_per_horizon.append(np.mean([elem[t] for elem in product_experiments if len(elem) > t]))
-        mean_regrets_per_horizon.append(np.mean([env.optimals[i] - elem[t] for elem in product_experiments if len(elem) > t]))
+    ts_product_experiments = [elem[i] for elem in ts_rewards_per_experiment]
+    print(np.shape(ts_product_experiments))
+    print(np.shape(np.mean(ts_product_experiments, axis=0)))
+    print(np.shape(np.cumsum(np.mean(ts_product_experiments, axis=0))))
     plt.figure(0)
-    ax, = plt.plot(mean_rewards_per_horizon, colors[i])
+    ax, = plt.plot(np.mean(ts_product_experiments, axis=0), colors[i])
     ax.set_label('Product ' + str(i+1))
     plt.figure(1)
-    ax, = plt.plot(np.cumsum(mean_rewards_per_horizon), colors[i])
+    ax, = plt.plot(np.cumsum(np.mean(ts_product_experiments, axis=0)), colors[i])
     ax.set_label('Product ' + str(i+1))
     plt.figure(2)
-    ax, = plt.plot(np.cumsum(mean_regrets_per_horizon), colors[i])
+    ax, = plt.plot(np.cumsum(np.mean(env.optimals[i] - ts_product_experiments, axis=0)), colors[i])
     ax.set_label('Product ' + str(i+1))
 plt.figure(0)
 plt.legend()

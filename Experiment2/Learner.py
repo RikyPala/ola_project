@@ -15,4 +15,6 @@ class Learner:
         self.counters = np.zeros(self.n_products, dtype=int)
 
     def update_observations(self, pulled_arms, rewards):
-        pass
+        for i in range(self.n_products):
+            self.rewards_per_arm[i][pulled_arms[i]].append(rewards[i])
+            self.collected_rewards[i].append(rewards[i])

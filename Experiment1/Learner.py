@@ -5,6 +5,8 @@ class Learner:
 
     def __init__(self, n_products, n_arms, n_user_types):
 
+        self.first_iteration = True
+
         self.n_products = n_products
         self.n_arms = n_arms
         self.n_user_types = n_user_types
@@ -14,14 +16,27 @@ class Learner:
 
         self.counters = np.zeros(self.n_products, dtype=int)
 
-    def pull_arms(self):
+    # TODO: add function to estimate node-arrival probabilities
+
+    # TODO: add function to estimate expected rewards
+
+    def pull_arms(self):  # TODO: remove pull_arms function
+
+        if self.first_iteration:
+            self.first_iteration = False
+            return [np.zeros(self.n_products)]
 
         mask = self.counters < self.n_arms - 1
-        choice = np.random.choice(np.arange(self.n_products)[mask])
-        self.counters[choice] += 1
-        pulled_arms = self.counters
-        return pulled_arms
+        configurations = []
+        for i in range(self.n_products):
+            if mask[i]:
+                arms = self.counters
+                arms[i] += 1
+                configurations.append(arms)
 
+        return configurations
+
+    """
     def update(self, pulled_arms, rewards):
 
         if np.shape(self.collected_rewards)[-1] == 0:
@@ -36,3 +51,4 @@ class Learner:
         stop = not improvements or all(self.counters == self.n_arms - 1)
 
         return stop
+    """

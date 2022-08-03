@@ -13,7 +13,7 @@ class Environment:
 
         # REWARDS VARIABLES
         self.prices = np.array([10, 20, 30, 40])
-        self.daily_users_ratios = np.array([0.40, 0.35, 0.25])
+        self.daily_users_ratios = np.array([0.40, 0.35, 0.25])  # TODO: remove and add attributes distributions
         self.conversion_rates = np.array([
             [
                 [0.80, 0.75, 0.90],
@@ -60,7 +60,7 @@ class Environment:
 
         # GRAPH VARIABLES
         self.lambda_p = 0.8
-        self.alpha_ratios = np.array([
+        self.alpha_ratios = np.array([  # TODO: rewrite as dirichlet probability distributions
             # [product_type == 0, product_type == 1, product_type == 2,
             #  product_type == 3, product_type == 4, competitor_page]
             [0.10, 0.15, 0.05, 0.15, 0.10, 0.45],  # user_type == 0
@@ -89,6 +89,7 @@ class Environment:
 
         rewards = np.zeros(self.n_products, dtype=int)
 
+        # TODO: Draw from attributes distributions
         for (user_type, product) in itertools.product(range(self.n_user_types), range(self.n_products)):
 
             for user in range(round(daily_users * self.daily_users_ratios[user_type] * self.alpha_ratios[user_type, product])):

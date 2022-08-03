@@ -89,7 +89,7 @@ class Environment:
 
         rewards = np.zeros(self.n_products, dtype=int)
 
-        # TODO: Draw from attributes distributions
+        # TODO: Draw from attributes distributions and change for accordingly
         for (user_type, product) in itertools.product(range(self.n_user_types), range(self.n_products)):
 
             for user in range(round(daily_users * self.daily_users_ratios[user_type] * self.alpha_ratios[user_type, product])):

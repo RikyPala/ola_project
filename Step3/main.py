@@ -2,8 +2,8 @@ import numpy as np
 from tqdm.auto import tqdm
 from matplotlib import pyplot as plt
 from Environment import Environment
-from Experiment2.TS import TS
-from Experiment2.UCB import UCB
+from Step3.TS import TS
+from Step3.UCB import UCB
 
 n_experiments = 100
 T = 20

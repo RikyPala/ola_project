@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm.auto import tqdm
 from matplotlib import pyplot as plt
-from Experiment1.Environment import Environment
+from Step2.Environment import Environment
 from GreedyLearner import GreedyLearner
 
 n_products = 5

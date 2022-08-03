@@ -1,4 +1,4 @@
-from Experiment2.Learner import Learner
+from Step3.Learner import Learner
 
 
 class UCB(Learner):

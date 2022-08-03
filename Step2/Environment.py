@@ -67,7 +67,7 @@ class Environment:
             [0.05, 0.10, 0.20, 0.20, 0.20, 0.25],  # user_type == 1
             [0.15, 0.10, 0.15, 0.15, 0.10, 0.35]  # user_type == 2
         ])
-        self.graph_probabilities = np.array([
+        self.graph_probabilities = np.array([  # TODO: divide graph probabilities per user-type
             # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
             [0, 0.40, 0.35, 0.40, 0.10],  # product_type == 0
             [0.30, 0, 0.25, 0.10, 0.15],  # product_type == 1

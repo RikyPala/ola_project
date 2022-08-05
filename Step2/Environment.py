@@ -1,8 +1,4 @@
 import numpy as np
-import itertools
-
-from queue import Queue
-
 
 class Environment:
     def __init__(self):
@@ -13,7 +9,7 @@ class Environment:
 
         # REWARDS VARIABLES
         self.prices = np.array([10, 20, 30, 40])
-        self.daily_users_ratios = np.array([0.40, 0.35, 0.25])  # TODO: remove and add attributes distributions
+        self.feature_probabilities = np.array([0.45, 0.65])
         self.conversion_rates = np.array([
             [
                 [0.80, 0.75, 0.90],
@@ -52,72 +48,117 @@ class Environment:
             [50, 40, 50]
         ])
 
-        expected_purchases = self.daily_users_ratios * self.conversion_rates * (self.max_products_sold / 2)
-        expected_purchases = np.sum(expected_purchases, axis=2).T
-        expected_rewards = expected_purchases * self.prices
-
-        self.optimals = np.max(expected_rewards, axis=1)
-
         # GRAPH VARIABLES
         self.lambda_p = 0.8
-        self.alpha_ratios = np.array([  # TODO: rewrite as dirichlet probability distributions
-            # [product_type == 0, product_type == 1, product_type == 2,
-            #  product_type == 3, product_type == 4, competitor_page]
-            [0.10, 0.15, 0.05, 0.15, 0.10, 0.45],  # user_type == 0
-            [0.05, 0.10, 0.20, 0.20, 0.20, 0.25],  # user_type == 1
-            [0.15, 0.10, 0.15, 0.15, 0.10, 0.35]  # user_type == 2
+        self.alpha_ratios_parameters = np.array([
+            [[3, 7], [10, 2], [5, 6], [3, 3], [25, 13], [13, 2]],
+            [[13, 15], [12, 20], [8, 6], [9, 3], [10, 12], [10, 3]],
+            [[10, 7], [3, 12], [14, 17], [15, 8], [11, 6], [8, 3]]
         ])
-        self.graph_probabilities = np.array([  # TODO: divide graph probabilities per user-type
-            # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
-            [0, 0.40, 0.35, 0.40, 0.10],  # product_type == 0
-            [0.30, 0, 0.25, 0.10, 0.15],  # product_type == 1
-            [0.35, 0.15, 0, 0.20, 0.30],  # product_type == 2
-            [0.10, 0.05, 0.20, 0, 0.15],  # product_type == 3
-            [0.10, 0.30, 0.25, 0.10, 0]  # product_type == 4
+        self.graph_probabilities = np.array([
+            [
+                [0, 0.40, 0.35, 0.40, 0.10],
+                [0.30, 0, 0.25, 0.10, 0.15],
+                [0.35, 0.15, 0, 0.20, 0.30],
+                [0.10, 0.05, 0.20, 0, 0.15],
+                [0.10, 0.30, 0.25, 0.10, 0]
+            ],
+            [
+                [0, 0.20, 0.50, 0.15, 0.45],
+                [0.25, 0, 0.30, 0.40, 0.10],
+                [0.45, 0.15, 0, 0.65, 0.15],
+                [0.55, 0.50, 0.35, 0, 0.65],
+                [0.15, 0.60, 0.35, 0.40, 0]
+            ],
+            [
+                [0, 0.25, 0.20, 0.45, 0.15],
+                [0.35, 0, 0.10, 0.55, 0.50],
+                [0.60, 0.45, 0, 0.50, 0.10],
+                [0.15, 0.15, 0.35, 0, 0.10],
+                [0.15, 0.25, 0.10, 0.55, 0]
+            ]
         ])
         self.secondaries = np.array([
-            [4, 2],  # product_type == 0
-            [0, 2],  # product_type == 1
-            [1, 3],  # product_type == 2
-            [4, 0],  # product_type == 3
-            [2, 3]  # product_type == 4
+            [4, 2],
+            [0, 2],
+            [1, 3],
+            [4, 0],
+            [2, 3]
         ])
+
+    def draw_user_type(self):
+        """
+        Example
+            - feature_1:
+                TRUE -> Young
+                FALSE -> Old
+            - feature_2:
+                TRUE -> Rich
+                FALSE -> Poor
+            - user_type:
+                0 -> Old Rich/Poor
+                1 -> Young Poor
+                2 -> Young Rich
+        :return: user_type
+        """
+        feature_1 = np.random.binomial(1, self.feature_probabilities[0])
+        feature_2 = np.random.binomial(1, self.feature_probabilities[1])
+        if not feature_1:
+            user_type = 0
+        elif not feature_2:
+            user_type = 1
+        else:
+            user_type = 2
+        return user_type
+
+    def draw_starting_page(self, user_type, alpha_ratios):
+        product = np.random.choice(6, p=alpha_ratios[user_type])
+        return product
+
+    def draw_alpha_ratios(self):
+        alpha_ratios = np.random.beta(self.alpha_ratios_parameters[:, :, 0], self.alpha_ratios_parameters[:, :, 1])
+        norm_factors = np.sum(alpha_ratios, axis=1)
+        alpha_ratios = (alpha_ratios.T / norm_factors).T
+        return alpha_ratios
 
     def round(self, pulled_arms):
 
         daily_users = np.random.randint(10, 200)
-
         rewards = np.zeros(self.n_products, dtype=int)
+        alpha_ratios = self.draw_alpha_ratios()
 
-        # TODO: Draw from attributes distributions and change for accordingly
-        for (user_type, product) in itertools.product(range(self.n_user_types), range(self.n_products)):
+        for _ in range(daily_users):
 
-            for user in range(round(daily_users * self.daily_users_ratios[user_type] * self.alpha_ratios[user_type, product])):
+            user_type = self.draw_user_type()
+            product = self.draw_starting_page(user_type=user_type, alpha_ratios=alpha_ratios)
+            if product == 5:  # competitors' page
+                continue
+            visited = []
+            to_visit = [product]
 
-                visited = []
-                to_visit = [product]
+            while to_visit:
+                current_product = to_visit.pop(0)
+                visited.append(current_product)
 
-                while to_visit:
-                    current_product = to_visit.pop(0)
-                    visited.append(current_product)
+                product_price = self.prices[pulled_arms[current_product]]
 
-                    product_price = self.prices[pulled_arms[current_product]]
+                buy = np.random.binomial(1, self.conversion_rates[
+                    pulled_arms[current_product], current_product, user_type])
+                if not buy:
+                    continue
 
-                    buy = np.random.binomial(1, self.conversion_rates[pulled_arms[current_product], current_product, user_type])
-                    if not buy:
-                        continue
+                products_sold = np.random.randint(0, self.max_products_sold[current_product, user_type])
+                rewards[current_product] += product_price * products_sold
 
-                    products_sold = np.random.randint(0, self.max_products_sold[current_product, user_type])
-                    rewards[current_product] += product_price * products_sold
+                secondary_1 = self.secondaries[current_product, 0]
+                success_1 = np.random.binomial(1, self.graph_probabilities[user_type, current_product, secondary_1])
+                if success_1 and secondary_1 not in visited and secondary_1 not in to_visit:
+                    to_visit.append(secondary_1)
 
-                    secondary_1 = self.secondaries[current_product, 0]
-                    success_1 = np.random.binomial(1, self.graph_probabilities[current_product, secondary_1])
-                    if success_1 and secondary_1 not in visited and secondary_1 not in to_visit:
-                        to_visit.append(secondary_1)
-
-                    secondary_2 = self.secondaries[current_product, 1]
-                    success_2 = np.random.binomial(1, self.lambda_p * self.graph_probabilities[current_product, secondary_2])
-                    if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
-                        to_visit.append(secondary_2)
+                secondary_2 = self.secondaries[current_product, 1]
+                success_2 = np.random.binomial(
+                    1, self.lambda_p * self.graph_probabilities[user_type, current_product, secondary_2])
+                if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
+                    to_visit.append(secondary_2)
 
         return rewards / daily_users

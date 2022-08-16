@@ -8,8 +8,20 @@ class Environment:
         self.n_user_types = 3
 
         # REWARDS VARIABLES
-        self.prices = np.array([10, 20, 30, 40])
+
         self.feature_probabilities = np.array([0.45, 0.65])
+        """
+        User types:
+            0 -> FALSE *
+            1 -> TRUE FALSE
+            2 -> TRUE TRUE
+        """
+        self.user_probabilities = np.array([
+            (1 - self.feature_probabilities[0]),
+            (self.feature_probabilities[0]) * (1 - self.feature_probabilities[1]),
+            (self.feature_probabilities[0]) * (self.feature_probabilities[1])])
+
+        self.prices = np.array([10, 20, 30, 40])
         self.conversion_rates = np.array([
             [
                 [0.80, 0.75, 0.90],

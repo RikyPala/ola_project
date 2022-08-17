@@ -4,7 +4,7 @@ from Environment import Environment
 
 class Learner:
 
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment()):
 
         self.env = env
         self.node_probabilities = []
@@ -19,9 +19,8 @@ class Learner:
         config = [0] * self.env.n_products
 
         self.node_probabilities = []
-        for i in range(self.env.n_user_types):
-            self.node_probabilities.append(self.estimate_node_activation_fully_connected(self.env.graph_probabilities[i], self.env.feature_probabilities))
-
+        # for i in range(self.env.n_user_types):
+        self.node_probabilities = self.estimate_node_activation_fully_connected(self.env.graph_probabilities, self.env.feature_probabilities)
         self.landing_probabilities = self.estimate_landing_probabilities(self.env.alpha_ratios_parameters)
 
         best_configuration = config
@@ -53,7 +52,6 @@ class Learner:
         print(best_reward)
         return best_configuration
 
-
     def evaluate_configuration(self, config):
 
         reward = 0
@@ -62,7 +60,8 @@ class Learner:
             arm = config[prod]
             price = self.env.prices[config[prod]]
             for user in range(self.env.n_user_types):
-                visits = self.env.user_probabilities[user] * self.landing_probabilities[user][prod+1] * self.node_probabilities[user][prod]
+                visits = self.env.user_probabilities[user] * self.landing_probabilities[user][prod + 1] * \
+                         self.node_probabilities[user][prod]
                 conversions = visits * self.env.conversion_rates[arm][prod][user]
                 sales = conversions * self.env.max_products_sold[prod][user]
                 reward += sales * price
@@ -70,72 +69,57 @@ class Learner:
         return reward
 
 
-    """
-    def update(self, pulled_arms, rewards):
-
-        if np.shape(self.collected_rewards)[-1] == 0:
-            improvements = True
-        else:
-            improvements = any(rewards > np.array([elem[-1] for elem in self.collected_rewards]))
-
-        for i in range(self.n_products):
-            self.rewards_per_arm[i][pulled_arms[i]].append(rewards[i])
-            self.collected_rewards[i].append(rewards[i])
-
-        stop = not improvements or all(self.counters == self.n_arms - 1)
-
-        return stop
-    """
-
-
     def estimate_node_activation_fully_connected(self, graph_probabilities, feature_probabilities):
-
-        probs = np.random.random(5)
-        probs /= probs.sum()
-        return probs
 
         tot_node_arrivals = np.empty((3, 5))  # z_i
         counters = np.zeros(3)  # k_i
         n_simulation = 10
+        n_day = 1
+        for d in range(n_day):
 
-        for s in range(n_simulation):
-            user_type_index_0 = np.random.binomial(1, feature_probabilities[0])
-            user_type_index_1 = 0
-            if user_type_index_0:
-                user_type_index_1 = np.random.binomial(1, feature_probabilities[1])
-                edge_weights = graph_probabilities[user_type_index_0 + user_type_index_1]
-                counters[user_type_index_0 + user_type_index_1] += 1
-            else:
-                edge_weights = graph_probabilities[user_type_index_0]
-                counters[user_type_index_0] += 1
+            alpha_ratios = self.env.draw_alpha_ratios()
 
-            flat_edge_weights = np.ravel(edge_weights)
-            live_edge_graph = np.array([np.random.binomial(1, p) for p in flat_edge_weights])
-            live_edge_graph = np.reshape(live_edge_graph, (5, 5))
+            for s in range(n_simulation):
+                user_type_index_0 = np.random.binomial(1, feature_probabilities[0])
+                user_type_index_1 = 0
+                if user_type_index_0:
+                    user_type_index_1 = np.random.binomial(1, feature_probabilities[1])
+                    edge_weights = graph_probabilities[user_type_index_0 + user_type_index_1]
+                    counters[user_type_index_0 + user_type_index_1] += 1
+                    seed = self.env.draw_starting_page(user_type_index_0 + user_type_index_1, alpha_ratios)
 
-            # DFS
-            frontier = []
-            already_visited = np.zeros(5)
-            seed = np.random.choice(5, 1).squeeze()
+                else:
+                    edge_weights = graph_probabilities[user_type_index_0]
+                    counters[user_type_index_0] += 1
+                    seed = self.env.draw_starting_page(user_type_index_0, alpha_ratios)
 
-            already_visited[seed] = 1
-            frontier.extend([idx for idx, p in enumerate(live_edge_graph[seed]) if p > 0])  # argwhere problem
-
-            while len(frontier) > 0:
-                seed = frontier.pop(0)
-                if already_visited[seed] > 0:
+                if seed == 5:
                     continue
-                already_visited[seed] = 1
-                frontier.extend([idx for idx, p in enumerate(live_edge_graph[seed]) if p > 0])
 
-            if user_type_index_0:
-                tot_node_arrivals[user_type_index_0 + user_type_index_1] += already_visited
-            else:
-                tot_node_arrivals[user_type_index_0] += already_visited
+                flat_edge_weights = np.ravel(edge_weights)
+                live_edge_graph = np.array([np.random.binomial(1, p) for p in flat_edge_weights])
+                live_edge_graph = np.reshape(live_edge_graph, (5, 5))
+                # DFS
+                frontier = []
+                already_visited = np.zeros(5)
+
+                already_visited[seed] = 1
+                frontier.extend([idx for idx, p in enumerate(live_edge_graph[seed]) if p > 0])  # argwhere problem
+
+                while len(frontier) > 0:
+                    seed = frontier.pop(0)
+                    if already_visited[seed] > 0:
+                        continue
+                    already_visited[seed] = 1
+                    frontier.extend([idx for idx, p in enumerate(live_edge_graph[seed]) if p > 0])
+
+                if user_type_index_0:
+                    tot_node_arrivals[user_type_index_0 + user_type_index_1] += already_visited
+                else:
+                    tot_node_arrivals[user_type_index_0] += already_visited
 
         node_arrival_probabilities = np.array([tot_node_arrivals[i] / count for i, count in enumerate(counters)])
         return node_arrival_probabilities
-
 
     def estimate_landing_probabilities(self, params):
 

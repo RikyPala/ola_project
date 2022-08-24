@@ -10,20 +10,20 @@ class Environment_UCB:
         self.n_products = 5
         self.n_arms = 4
 
-        self.prices = np.array([10, 20, 30, 40])
+        self.prices = np.array([10, 15, 20, 25])
 
         self.conversion_rates = np.array([
-
-                [0.80, 0.70, 0.65, 0.75, 0.50],
-
-
-                [0.70, 0.65, 0.55, 0.70, 0.48],
+                #PRODUCTS
+                [0.80, 0.70, 0.65, 0.75, 0.50], #ARMS
 
 
-                [0.63, 0.60, 0.60, 0.68, 0.45],
+                [0.60, 0.50, 0.45, 0.55, 0.30],
 
 
-                [0.55, 0.40, 0.50, 0.58, 0.30],
+                [0.40, 0.30, 0.25, 0.35, 0.10],
+
+
+                [0.20, 0.10, 0.05, 0.15, 0.05],
 
         ])
         self.max_products_sold = np.array(
@@ -70,9 +70,10 @@ class Environment_UCB:
         buyers = np.zeros(len(pulled_arms))
         visitors = np.zeros(len(pulled_arms))
         products_sold = np.zeros(len(pulled_arms))
-
+        print("DAYLY USERRRRSS")
+        print(daily_users)
         for _ in range(daily_users):
-            print("////NEW USERRRRR")
+            #print("////NEW USERRRRR")
             product = self.draw_starting_page(alpha_ratios=alpha_ratios)
             if product == 5:  # competitors' page
                 continue
@@ -84,11 +85,12 @@ class Environment_UCB:
                 visited.append(current_product)
                 visitors[current_product] += 1
                 product_price = self.prices[pulled_arms[current_product]]
-                print('current product %i'%(current_product))
+                #print('current product %i'%(current_product))
+                #print(self.conversion_rates[pulled_arms[current_product], current_product])
                 buy = np.random.binomial(1, self.conversion_rates[pulled_arms[current_product], current_product])
                 if not buy:
                     continue
-                print('BUYED ITEMM %i'%(current_product))
+
                 buyers[current_product] += 1
                 n_products = np.random.randint(0, self.max_products_sold[current_product])
                 products_sold[current_product] += n_products
@@ -105,4 +107,8 @@ class Environment_UCB:
                 if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                     to_visit.append(secondary_2)
 
-        return rewards, buyers/visitors, products_sold
+        print("BUYERSSS")
+        print(buyers)
+        print("VISITORSSS")
+        print(visitors)
+        return rewards, np.nan_to_num(buyers/visitors), products_sold

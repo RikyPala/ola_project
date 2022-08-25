@@ -17,15 +17,13 @@ class UCB():
         self.confidence = np.ones((n_products, n_arms))*np.inf
         self.t = 1
 
-    def pull_arm(self, prices):
-
+    def pull_arm(self, prices, products_sold, expected_ratios):
         upper_conf = self.empirical_means + self.confidence
-        print("UPPER CONFIDENCE")
-        print(upper_conf)
         superarm = []
         for i in range(self.n_products):
             dot = upper_conf[i]*prices
-            sel = np.where(dot == dot.max())
+            dot = dot * products_sold[i]
+            dot = dot * expected_ratios[i]
             j = np.random.choice(np.where(dot == dot.max())[0])
             self.pulled_rounds[i][j] += 1
             superarm.append(j)
@@ -33,8 +31,9 @@ class UCB():
         return superarm
 
     def update(self, pulled_arms, conversion_rates):
+
         for i in range(self.n_products):
-            self.empirical_means[i][pulled_arms[i]] = (self.empirical_means[i][pulled_arms[i]] * (self.t - 1) + conversion_rates[i]) / self.t
+            self.empirical_means[i][pulled_arms[i]] = (self.empirical_means[i][pulled_arms[i]] * (self.pulled_rounds[i][pulled_arms[i]]-1) + conversion_rates[i]) / self.pulled_rounds[i][pulled_arms[i]]
         print("EMPIRICAL MEAN")
         print(self.empirical_means)
         for i in range(self.n_products):
@@ -44,10 +43,4 @@ class UCB():
         print("CONFIDENCE")
         print(self.confidence)
         self.t += 1
-
-
-"""    def update_observations(self, pulled_arms, rewards):
-        for i in range(self.n_products):
-            self.rewards_per_arm[i][pulled_arms[i]].append(rewards[i])
-            self.collected_rewards[i].append(rewards[i]) """
 

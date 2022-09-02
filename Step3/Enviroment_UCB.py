@@ -40,7 +40,7 @@ class Environment_UCB:
 
         )
 
-        self.expected_alpha_ratios = np.array([0.3, 12/10, 5/11, 0.5, 25/38, 13/15])
+        self.expected_alpha_ratios = np.array([0.3, 10/12, 5/11, 0.5, 25/38, 13/15])
 
         self.graph_probabilities = np.array([
             # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
@@ -70,6 +70,8 @@ class Environment_UCB:
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         alpha_ratios = np.reshape(alpha_ratios, -1)
         return alpha_ratios
+
+    # TODO: the user types are still present!
 
     def round(self, pulled_arms):
 
@@ -112,4 +114,4 @@ class Environment_UCB:
         print(buyers)
         print("VISITORSSS")
         print(visitors)
-        return np.nan_to_num(buyers/visitors)
+        return np.nan_to_num(buyers/visitors), alpha_ratios

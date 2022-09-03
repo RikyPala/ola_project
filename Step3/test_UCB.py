@@ -19,4 +19,3 @@ while ucb.t<10000:
     ucb.update(pulled_arms, conversion, alpha_ratios, env.graph_probabilities, env.secondaries, pulled_arms, env.lambda_p)
 
 
-print(env.mean_dirichlet)

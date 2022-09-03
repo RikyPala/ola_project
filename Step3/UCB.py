@@ -8,28 +8,38 @@ class UCB():
 
         self.n_products = n_products
         self.n_arms = n_arms
-        self.rewards_per_arm = [[[] for _ in range(self.n_arms)] for _ in range(self.n_products)]
-        self.collected_rewards = [[[]for _ in range(self.n_arms)] for _ in range(self.n_products)]
         self.counters = np.zeros((self.n_products, self.n_arms), dtype=int)
-        self.collected_realization_per_arm = [[[]for _ in range(self.n_arms)] for _ in range(self.n_products)]
         self.pulled_rounds = np.zeros((n_products, n_arms)) # how many round a specific arm has been pulled, one for the initialization
         self.empirical_means = np.zeros((n_products, n_arms))
         self.confidence = np.ones((n_products, n_arms))*np.inf
+        self.node_prob = np.zeros(5)
+        self.previous_pulled = np.zeros(5)
         self.t = 1
 
     def pull_arm(self, prices, products_sold):
-
 
         upper_conf = self.empirical_means + self.confidence
         superarm = []
         for i in range(self.n_products):
             dot = upper_conf[i]*prices
             dot = dot * products_sold[i]
+            if self.t > 1:
+                #print("PREVIOUS PULLED ARM")
+                #print(self.previous_pulled[i])
+                #print("NODE PRBABILITIES")
+                #print(self.node_prob[0][i])
+                dot[self.previous_pulled[i]] *= self.node_prob[0][i]
             j = np.random.choice(np.where(dot == dot.max())[0])
             self.pulled_rounds[i][j] += 1
             superarm.append(j)
+        print("PULLED ROUNDS")
         print(self.pulled_rounds)
+        self.previous_pulled = superarm
+        print("SUPERARM")
+        print(superarm)
         return superarm
+
+
 
     def update(self, pulled_arms, conversion_rates, alpha_ratios, graph_prob, secondaries, pulled, lamb):
 
@@ -44,78 +54,81 @@ class UCB():
                 self.confidence[i][a] = (2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
         print("CONFIDENCE")
         print(self.confidence)
-        node_prob = self.node_probabilities(alpha_ratios, graph_prob, secondaries, lamb, pulled_arms)
+        self.node_probabilities(alpha_ratios, graph_prob, secondaries, lamb, pulled_arms)
         self.t += 1
-        return node_prob
+
 
 
 
     def node_probabilities(self, alpha_ratios, graph_prob, secondaries, lamb, pulled_arms):
 
-        tot_node_arrivals = np.empty(5)
-        users_per_day = 10
+        tot_node_arrivals = np.zeros(5)
+        users_per_day = 100
         for user in range(users_per_day):
+
+            already_visited = np.zeros(5)
             seed = self.simulate_starting_page(alpha_ratios)
             if seed == 5:
+
                 continue
             live_edge_graph = np.zeros((5, 5))
 
             start = seed
-            already_visited = np.zeros(5)
             frontier = []
             frontier.append(start)
-            print("Seed")
-            print(seed)
+
             while len(frontier) > 0:
                 start = frontier.pop(0)
+                #print("Start")
+                #print(start)
                 if already_visited[start] > 0:
                     continue
-
-                already_visited[start] == 1
-
+                else:
+                    already_visited[start] = 1
                 for a in secondaries[start]:
-                    print("aaa")
-                    print(a)
+                    #print("secondaries")
+                    #print(a)
                     if a == secondaries[start][0]:
-                        print('conversion rate of product')
-                        print(a)
-                        print('with arm')
-                        print(pulled_arms[a])
                         product = graph_prob[start][a]*self.empirical_means[a][pulled_arms[a]]
                         live_edge_graph[start][a] = np.random.binomial(1, product)
+                        if live_edge_graph[start][a] > 0:
+                            """
+                            print("product between")
+                            print(graph_prob[start][a])
+                            print(self.empirical_means[a][pulled_arms[a]])
+                            """
+
                     else:
-                        live_edge_graph[start][a] = np.random.binomial(1, graph_prob[start][a] *
-                                                                       self.empirical_means[a][pulled_arms[a]]*lamb)
-                    candidates = np.where(live_edge_graph[start] == 1)
-                    for i in candidates:
-                        if already_visited[i] != 1:
-                            frontier.append(i)
+                        live_edge_graph[start][a] = np.random.binomial(1, graph_prob[start][a] * self.empirical_means[a][pulled_arms[a]]*lamb)
 
-
-            print("Live edge graph")
-            print(live_edge_graph)
-
-            # DFS
-            frontier = []
-            already_visited = np.zeros(5)
-
-            already_visited[seed] = 1
-            frontier.extend([idx for idx, p in enumerate(live_edge_graph[seed]) if p > 0])  # argwhere problem
-
-            while len(frontier) > 0:
-                seed = frontier.pop(0)
-                if already_visited[seed] > 0:
-                    continue
-                already_visited[seed] = 1
-                frontier.extend([idx for idx, p in enumerate(live_edge_graph[seed]) if p > 0])
+                        if live_edge_graph[start][a] > 0:
+                            """print("product between")
+                            print(graph_prob[start][a])
+                            print(self.empirical_means[a][pulled_arms[a]])
+                            print(lamb)"""
+                candidates = np.where(live_edge_graph[start] == 1)
+                #print("CANDIDATES")
+                #print(candidates)
+                for i in candidates[0]:
+                    #print(i)
+                    if already_visited[i] != 1:
+                        frontier.append(i)
+                """
+                print("FRONTIER")
+                print(frontier)
+                print("ALREADY VISITED")
+                print(already_visited)
+                """
+            #print("Live edge graph")
+            #print(live_edge_graph)
 
             tot_node_arrivals += already_visited
+            #print("TOT NODE ARRIVALS")
+            #print(tot_node_arrivals)
 
-        node_arrival_probabilities = np.array([tot_node_arrivals[i] / users_per_day])
-        print("NODE PROB")
-        print(node_arrival_probabilities)
-
-        return node_arrival_probabilities
+        self.node_prob = np.array([tot_node_arrivals / users_per_day])
+        #print("NODE PROB")
+        #print(self.node_prob)
 
 
     def simulate_starting_page(self, alpha_ratios):

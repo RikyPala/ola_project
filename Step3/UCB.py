@@ -12,8 +12,8 @@ class UCB():
         self.pulled_rounds = np.zeros((n_products, n_arms)) # how many round a specific arm has been pulled, one for the initialization
         self.empirical_means = np.zeros((n_products, n_arms))
         self.confidence = np.ones((n_products, n_arms))*np.inf
-        self.node_prob = np.zeros(5)
-        self.previous_pulled = np.zeros(5)
+        self.node_prob = np.zeros(3)
+        self.previous_pulled = np.zeros(3)
         self.t = 1
 
     def pull_arm(self, prices, products_sold):
@@ -22,13 +22,20 @@ class UCB():
         superarm = []
         for i in range(self.n_products):
             dot = upper_conf[i]*prices
+            print("DOTTTTTTT")
+            print(dot)
             dot = dot * products_sold[i]
+            print("DOTTTTTTT")
+            print(dot)
+            print(products_sold[i])
             if self.t > 1:
-                #print("PREVIOUS PULLED ARM")
-                #print(self.previous_pulled[i])
-                #print("NODE PRBABILITIES")
-                #print(self.node_prob[0][i])
-                dot[self.previous_pulled[i]] *= self.node_prob[0][i]
+                print("PREVIOUS PULLED ARM")
+                print(self.previous_pulled[i])
+                print("NODE PRBABILITIES")
+                print(self.node_prob[0][i])
+                dot *= self.node_prob[0][i]
+                print("FINALL DOTTT")
+                print(dot)
             j = np.random.choice(np.where(dot == dot.max())[0])
             self.pulled_rounds[i][j] += 1
             superarm.append(j)
@@ -62,16 +69,15 @@ class UCB():
 
     def node_probabilities(self, alpha_ratios, graph_prob, secondaries, lamb, pulled_arms):
 
-        tot_node_arrivals = np.zeros(5)
-        users_per_day = 100
+        tot_node_arrivals = np.zeros(3)
+        users_per_day = 250
         for user in range(users_per_day):
 
-            already_visited = np.zeros(5)
+            already_visited = np.zeros(3)
             seed = self.simulate_starting_page(alpha_ratios)
-            if seed == 5:
-
+            if seed == 3:
                 continue
-            live_edge_graph = np.zeros((5, 5))
+            live_edge_graph = np.zeros((3, 3))
 
             start = seed
             frontier = []
@@ -127,12 +133,12 @@ class UCB():
             #print(tot_node_arrivals)
 
         self.node_prob = np.array([tot_node_arrivals / users_per_day])
-        #print("NODE PROB")
-        #print(self.node_prob)
+        print("NODE PROB")
+        print(self.node_prob)
 
 
     def simulate_starting_page(self, alpha_ratios):
-        product = np.random.choice(6, p=alpha_ratios)
+        product = np.random.choice(4, p=alpha_ratios)
         return product
 
 

@@ -7,59 +7,52 @@ from queue import Queue
 class Environment_UCB:
     def __init__(self):
 
-        self.n_products = 5
-        self.n_arms = 4
+        self.n_products = 3
+        self.n_arms = 2
 
-        self.prices = np.array([10, 12, 15, 17])
+        self.prices = np.array([10, 20])
 
         self.conversion_rates = np.array([
                 #PRODUCTS
-                [0.80, 0.80, 0.80, 0.80, 0.80], #ARMS
+                [0.60, 0.40, 0.70],#ARMS
 
 
-                [0.70, 0.70, 0.70, 0.70, 0.70],
-
-
-                [0.60, 0.60, 0.60, 0.60, 0.60],
-
-
-                [0.50, 0.50, 0.50, 0.50, 0.50],
+                [0.50, 0.25, 0.65]
 
         ])
-        self.products_sold = np.array([
-            [20, 18, 15, 14],
-            [30, 28, 25, 23],
-            [35, 33, 32, 30],
-            [60, 58, 55, 50],
-            [18, 16, 15, 12]])
+
 
         # GRAPH VARIABLES
         self.lambda_p = 0.8
         self.alpha_ratios_parameters = np.array(
-            [[[3, 7], [10, 2], [5, 6], [3, 3], [25, 13], [13, 2]]]
+            [[[2, 8], [3, 7], [1, 9], [4, 6]]]
 
         )
 
-        self.expected_alpha_ratios = np.array([0.3, 10/12, 5/11, 0.5, 25/38, 13/15])
+        self.alpha_ratios = np.array([0.2, 0.3, 0.1, 0.4])
+
+        #self.expected_alpha_ratios = np.array([0.3, 10/12, 5/11, 0.5, 25/38, 13/15])
 
         self.graph_probabilities = np.array([
-            # [product_type == 0, product_type == 1, product_type == 2, product_type == 3, product_type == 4]
-            [0, 0.40, 0.35, 0.40, 0.10],  # product_type == 0
-            [0.30, 0, 0.25, 0.10, 0.15],  # product_type == 1
-            [0.35, 0.15, 0, 0.20, 0.30],  # product_type == 2
-            [0.10, 0.05, 0.20, 0, 0.15],  # product_type == 3
-            [0.10, 0.30, 0.25, 0.10, 0]  # product_type == 4
+            # [product_type == 0, product_type == 1, product_type == 2]
+            [0, 0.25, 0.10],  # product_type == 0
+            [0.05, 0, 0.30],  # product_type == 1
+            [0.20, 0.10, 0],  # product_type == 2
         ])
         self.secondaries = np.array([
-            [4, 2],  # product_type == 0
-            [0, 2],  # product_type == 1
-            [1, 3],  # product_type == 2
-            [4, 0],  # product_type == 3
-            [2, 3]  # product_type == 4
+            [1, 2],  # product_type == 0
+            [2, 0],  # product_type == 1
+            [0, 1],  # product_type == 2
+        ])
+
+        self.product_sold = np.array([
+            [40, 30],
+            [40, 30],
+            [40, 30]
         ])
 
     def draw_starting_page(self, alpha_ratios):
-        product = np.random.choice(6, p=alpha_ratios)
+        product = np.random.choice(4, p=self.alpha_ratios)
         return product
 
     def draw_alpha_ratios(self):
@@ -84,7 +77,7 @@ class Environment_UCB:
 
         for _ in range(daily_users):
             product = self.draw_starting_page(alpha_ratios=alpha_ratios)
-            if product == 5:  # competitors' page
+            if product == 3:  # competitors' page
                 continue
             visited = []
             to_visit = [product]
@@ -114,4 +107,4 @@ class Environment_UCB:
         print(buyers)
         print("VISITORSSS")
         print(visitors)
-        return np.nan_to_num(buyers/visitors), alpha_ratios
+        return np.nan_to_num(buyers/visitors), self.alpha_ratios

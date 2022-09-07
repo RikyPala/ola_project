@@ -1,37 +1,24 @@
 import numpy as np
-import itertools
-
-from queue import Queue
-
 
 class Environment_UCB:
+
+
     def __init__(self):
 
         self.n_products = 3
         self.n_arms = 2
-
         self.prices = np.array([10, 20])
-
         self.conversion_rates = np.array([
                 #PRODUCTS
                 [0.60, 0.40, 0.70],#ARMS
-
-
                 [0.50, 0.25, 0.65]
-
         ])
-
 
         # GRAPH VARIABLES
         self.lambda_p = 0.8
         self.alpha_ratios_parameters = np.array(
-            [[[2, 8], [3, 7], [1, 9], [4, 6]]]
-
+            [[[20, 80], [30, 70], [10, 90], [40, 60]]]
         )
-
-        self.alpha_ratios = np.array([0.2, 0.3, 0.1, 0.4])
-
-        #self.expected_alpha_ratios = np.array([0.3, 10/12, 5/11, 0.5, 25/38, 13/15])
 
         self.graph_probabilities = np.array([
             # [product_type == 0, product_type == 1, product_type == 2]
@@ -52,13 +39,11 @@ class Environment_UCB:
         ])
 
     def draw_starting_page(self, alpha_ratios):
-        product = np.random.choice(4, p=self.alpha_ratios)
+        product = np.random.choice(4, p= alpha_ratios)
         return product
 
     def draw_alpha_ratios(self):
         alpha_ratios = np.random.beta(self.alpha_ratios_parameters[:,:, 0], self.alpha_ratios_parameters[:,:, 1])
-        print("ALPHA RATIO MEAN VALUES")
-        print(np.random.beta(self.alpha_ratios_parameters[:,:, 0], self.alpha_ratios_parameters[:,:, 1]).mean())
         norm_factors = np.sum(alpha_ratios, axis=1)
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         alpha_ratios = np.reshape(alpha_ratios, -1)
@@ -107,4 +92,4 @@ class Environment_UCB:
         print(buyers)
         print("VISITORSSS")
         print(visitors)
-        return np.nan_to_num(buyers/visitors), self.alpha_ratios
+        return np.nan_to_num(buyers/visitors)

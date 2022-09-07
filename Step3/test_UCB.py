@@ -5,7 +5,7 @@ from scipy.stats import dirichlet
 
 ucb = UCB(3, 2)
 env = Environment_UCB()
-T=100000
+T=100
 alpha_ratios = env.draw_alpha_ratios()
 
 while ucb.t < T:

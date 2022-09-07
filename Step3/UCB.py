@@ -16,6 +16,14 @@ class UCB():
         self.previous_pulled = np.zeros(3)
         self.t = 1
         self.expected_alpha_ratios = np.array([0.2, 0.3, 0.1, 0.4])
+        self.marginal_reward = np.zeros((3,2))
+        self.prices = np.array([10, 20])
+        self.product_sold = np.array([
+            [40, 30],
+            [40, 30],
+            [40, 30]
+        ])
+
 
     def pull_arm(self, prices, products_sold):
 
@@ -49,7 +57,7 @@ class UCB():
 
 
 
-    def update(self, pulled_arms, conversion_rates, graph_prob, secondaries, pulled, lamb):
+    def update(self, pulled_arms, conversion_rates, graph_prob, secondaries, lamb):
 
         for i in range(self.n_products):
             self.empirical_means[i][pulled_arms[i]] = (self.empirical_means[i][pulled_arms[i]] *
@@ -63,15 +71,35 @@ class UCB():
         print("CONFIDENCE")
         print(self.confidence)
         self.node_probabilities(graph_prob, secondaries, lamb, pulled_arms)
-        self.t += 1
 
+        difference = self.prob - self.expected_alpha_ratios
+
+        margin_reward = np.zeros((3,2))
+
+        for i in self.n_products:
+            if difference[i]>0:
+                margin = difference[i] * self.empirical_means[i][pulled_arms[i]]
+                for j in self.n_products:
+                    if secondaries[j][0] == i:
+                        first = graph_prob[j, i]
+                    elif secondaries[j][1] == i:
+                        second = graph_prob[j, i]*lamb
+
+                contr_1 = first /(first + second)
+                contr_2 = second / (first + second)
+                margin_reward[i][secondaries[i][0]] = margin * contr_1
+                margin_reward[i][secondaries[i][1]] = margin * contr_2
+                self.marginal_reward[secondaries[i][0]][pulled_arms[secondaries[i][0]]] =+ margin_reward[i][secondaries[i][0]]
+
+
+        self.t += 1
 
 
 
     def node_probabilities(self,graph_prob, secondaries, lamb, pulled_arms):
 
         tot_node_arrivals = np.zeros(3)
-        users_per_day = 250
+        users_per_day = 100
         for user in range(users_per_day):
 
             already_visited = np.zeros(3)

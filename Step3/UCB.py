@@ -9,12 +9,13 @@ class UCB():
         self.n_products = n_products
         self.n_arms = n_arms
         self.counters = np.zeros((self.n_products, self.n_arms), dtype=int)
-        self.pulled_rounds = np.zeros((n_products, n_arms)) # how many round a specific arm has been pulled, one for the initialization
+        self.pulled_rounds = np.zeros((n_products, n_arms))
         self.empirical_means = np.zeros((n_products, n_arms))
         self.confidence = np.ones((n_products, n_arms))*np.inf
         self.node_prob = np.zeros(3)
         self.previous_pulled = np.zeros(3)
         self.t = 1
+        self.expected_alpha_ratios = np.array([0.2, 0.3, 0.1, 0.4])
 
     def pull_arm(self, prices, products_sold):
 
@@ -48,7 +49,7 @@ class UCB():
 
 
 
-    def update(self, pulled_arms, conversion_rates, alpha_ratios, graph_prob, secondaries, pulled, lamb):
+    def update(self, pulled_arms, conversion_rates, graph_prob, secondaries, pulled, lamb):
 
         for i in range(self.n_products):
             self.empirical_means[i][pulled_arms[i]] = (self.empirical_means[i][pulled_arms[i]] *
@@ -61,20 +62,20 @@ class UCB():
                 self.confidence[i][a] = (2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
         print("CONFIDENCE")
         print(self.confidence)
-        self.node_probabilities(alpha_ratios, graph_prob, secondaries, lamb, pulled_arms)
+        self.node_probabilities(graph_prob, secondaries, lamb, pulled_arms)
         self.t += 1
 
 
 
 
-    def node_probabilities(self, alpha_ratios, graph_prob, secondaries, lamb, pulled_arms):
+    def node_probabilities(self,graph_prob, secondaries, lamb, pulled_arms):
 
         tot_node_arrivals = np.zeros(3)
         users_per_day = 250
         for user in range(users_per_day):
 
             already_visited = np.zeros(3)
-            seed = self.simulate_starting_page(alpha_ratios)
+            seed = self.simulate_starting_page()
             if seed == 3:
                 continue
             live_edge_graph = np.zeros((3, 3))
@@ -137,8 +138,8 @@ class UCB():
         print(self.node_prob)
 
 
-    def simulate_starting_page(self, alpha_ratios):
-        product = np.random.choice(4, p=alpha_ratios)
+    def simulate_starting_page(self):
+        product = np.random.choice(4, p=self.expected_alpha_ratios)
         return product
 
 

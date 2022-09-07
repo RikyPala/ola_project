@@ -5,19 +5,17 @@ from scipy.stats import dirichlet
 
 ucb = UCB(3, 2)
 env = Environment_UCB()
-T=100
+T=100000
 alpha_ratios = env.draw_alpha_ratios()
 
-while ucb.t<100000:
+while ucb.t < T:
 
     pulled_arms = ucb.pull_arm(env.prices, env.product_sold)
     print("PULLED")
     print(pulled_arms)
-    conversion, alpha_ratios = env.round(pulled_arms)
+    conversion = env.round(pulled_arms)
     print("CONVERSIONNNNNNNNNNNNNNNNNNNNNNN")
     print(conversion)
-    print("Alpha ratios")
-    print(alpha_ratios)
-    ucb.update(pulled_arms, conversion, alpha_ratios, env.graph_probabilities, env.secondaries, pulled_arms, env.lambda_p)
+    ucb.update(pulled_arms, conversion, env.graph_probabilities, env.secondaries, pulled_arms, env.lambda_p)
 
 

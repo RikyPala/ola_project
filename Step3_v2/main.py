@@ -6,8 +6,8 @@ from Environment import Environment
 from UCB import UCB
 
 env = Environment()
-T = 100
-n_experiments = 50
+T = 80
+n_experiments = 5
 rewards_per_experiment = np.empty((n_experiments, env.n_products, T))
 
 for e in tqdm(range(n_experiments)):

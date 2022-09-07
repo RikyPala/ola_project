@@ -170,6 +170,11 @@ class Environment:
                 if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                     to_visit.append(secondary_2)
 
-        conversion_rates = buyers / visitors
+        nan_idxs = (visitors == 0)
+        conversion_rates = np.zeros(self.n_products)
+        conversion_rates[~nan_idxs] = buyers[~nan_idxs] / visitors[~nan_idxs]
+        rewards[~nan_idxs] = rewards[~nan_idxs] / visitors[~nan_idxs]
+        conversion_rates[nan_idxs] = -1
+        rewards[nan_idxs] = -1
 
-        return rewards / visitors, conversion_rates
+        return rewards, conversion_rates

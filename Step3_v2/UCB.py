@@ -89,18 +89,26 @@ class UCB(Learner):
         return best_configuration
 
     def update(self, rewards, conversion_rates, pulled_arms):
+
         idxs = np.arange(self.n_products)
         n_pulls = self.pulled_rounds[idxs, pulled_arms]
 
         old_em = self.empirical_means[idxs, pulled_arms]
+        rewards[rewards == -1] = old_em[rewards == -1]
         self.empirical_means[idxs, pulled_arms] = (old_em * (n_pulls - 1) + rewards) / n_pulls
 
         self.confidence[idxs, pulled_arms] = (2 * np.log(self.t) / n_pulls) ** 0.5
 
         old_ecr = self.estimated_conversion_rates[idxs, pulled_arms]
+        conversion_rates[conversion_rates == -1] = old_ecr[conversion_rates == -1]
         self.estimated_conversion_rates[idxs, pulled_arms] = (old_ecr * (n_pulls - 1) + conversion_rates) / n_pulls
 
-        # print(n_pulls)
-        # print(self.estimated_conversion_rates)
-
         self.t += 1
+
+        if (rewards == -1).any() or (conversion_rates == -1).any():
+            print(rewards)
+            print(self.empirical_means)
+            print(conversion_rates)
+            print(self.estimated_conversion_rates)
+
+        self.update_observations(rewards)

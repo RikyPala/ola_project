@@ -99,11 +99,9 @@ class UCB():
     def compute_contribution(self, graph_prob, secondaries, i, j, lamb, contribution, difference, pulled_arms):
         total_contribution = []
         for k in range(self.n_products):
-            if k == i:
-                continue
             if secondaries[k][0] == j:
                 total_contribution.append(graph_prob[k][j])
-            elif secondaries[k][1]:
+            elif secondaries[k][1] == j:
                 total_contribution.append(graph_prob[k][j]*lamb)
 
             print("TOTAL CONTRIBUTIONNN")

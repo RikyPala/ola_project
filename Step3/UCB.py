@@ -42,7 +42,7 @@ class UCB():
                 print(self.previous_pulled[i])
                 print("NODE PRBABILITIES")
                 print(self.node_prob[0][i])
-                dot *= self.node_prob[0][i]
+                dot[self.previous_pulled[i]] += self.marginal_reward[i][self.previous_pulled[i]]
                 print("FINALL DOTTT")
                 print(dot)
             j = np.random.choice(np.where(dot == dot.max())[0])
@@ -72,27 +72,52 @@ class UCB():
         print(self.confidence)
         self.node_probabilities(graph_prob, secondaries, lamb, pulled_arms)
 
-        difference = self.prob - self.expected_alpha_ratios
+        difference = self.node_prob - self.expected_alpha_ratios[:3]
+        print("DIFFERENCEEEE")
+        print(difference[0])
 
-        margin_reward = np.zeros((3,2))
+        for i in range(self.n_products):
+            contr_1 = 0
+            contr_2 = 0
+            for j in range(self.n_products):
+                if secondaries[i][0] == j and difference[0][j] > 0:
+                    first = graph_prob[j, i]
+                    contr_1 = self.compute_contribution(graph_prob, secondaries, i, j, lamb, first, difference[0], self.previous_pulled)
+                elif secondaries[i][1] == j and difference[0][j] > 0:
+                    second = graph_prob[j, i]*lamb
+                    contr_2 = self.compute_contribution(graph_prob, secondaries, i, j, lamb, second, difference[0], self.previous_pulled)
 
-        for i in self.n_products:
-            if difference[i]>0:
-                margin = difference[i] * self.empirical_means[i][pulled_arms[i]]
-                for j in self.n_products:
-                    if secondaries[j][0] == i:
-                        first = graph_prob[j, i]
-                    elif secondaries[j][1] == i:
-                        second = graph_prob[j, i]*lamb
-
-                contr_1 = first /(first + second)
-                contr_2 = second / (first + second)
-                margin_reward[i][secondaries[i][0]] = margin * contr_1
-                margin_reward[i][secondaries[i][1]] = margin * contr_2
-                self.marginal_reward[secondaries[i][0]][pulled_arms[secondaries[i][0]]] =+ margin_reward[i][secondaries[i][0]]
-
+            print("CONTRIBUTION1")
+            print(contr_1)
+            print("CONTRIBUTION2")
+            print(contr_2)
+            self.marginal_reward[i][pulled_arms[i]] = contr_1+contr_2
 
         self.t += 1
+
+
+    def compute_contribution(self, graph_prob, secondaries, i, j, lamb, contribution, difference, pulled_arms):
+        total_contribution = []
+        for k in range(self.n_products):
+            if k == i:
+                continue
+            if secondaries[k][0] == j:
+                total_contribution.append(graph_prob[k][j])
+            elif secondaries[k][1]:
+                total_contribution.append(graph_prob[k][j]*lamb)
+
+            print("TOTAL CONTRIBUTIONNN")
+            print(total_contribution)
+            print(np.sum(total_contribution))
+        margin_reward = difference[j]*self.empirical_means[j][pulled_arms[j]]*self.prices[pulled_arms[j]]* \
+                        self.product_sold[j][pulled_arms[j]]
+        print(margin_reward)
+
+        return (contribution / np.sum(total_contribution))*margin_reward
+
+
+
+
 
 
 

@@ -5,7 +5,7 @@ from scipy.stats import dirichlet
 
 ucb = UCB(3, 2)
 env = Environment_UCB()
-T=100
+T=10000
 alpha_ratios = env.draw_alpha_ratios()
 
 while ucb.t < T:
@@ -16,6 +16,6 @@ while ucb.t < T:
     conversion = env.round(pulled_arms)
     print("CONVERSIONNNNNNNNNNNNNNNNNNNNNNN")
     print(conversion)
-    ucb.update(pulled_arms, conversion, env.graph_probabilities, env.secondaries, pulled_arms, env.lambda_p)
+    ucb.update(pulled_arms, conversion, env.graph_probabilities, env.secondaries, env.lambda_p)
 
 

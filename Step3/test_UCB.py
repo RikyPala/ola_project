@@ -9,7 +9,7 @@ from scipy.stats import dirichlet
 
 ucb = UCB(3, 2)
 env = Environment_UCB()
-T=0
+T = 10000
 alpha_ratios = env.draw_alpha_ratios()
 
 def find_optimal_arm(env):
@@ -36,15 +36,15 @@ def find_parents_lv1(env, i, configuration, reward, common_term):
     parents_lv2 = []
     for k in range(len(configuration)):
         print(k)
-        if env.secondaries[k][0]==i :
+        if env.secondaries[k][0] == i:
             reward[i] += env.expected_alpha_ratios[k]*\
                          env.conversion_rates[configuration[k]][k]*\
                          env.graph_probabilities[k][i]*common_term
-            parents_lv2.append([k,0])
-        elif env.secondaries[k][1]==i :
+            parents_lv2.append([k, 0])
+        elif env.secondaries[k][1] == i:
             reward[i] += env.expected_alpha_ratios[k]*env.conversion_rates[configuration[k]][k]* \
                          env.lambda_p*env.graph_probabilities[k][i]*common_term
-            parents_lv2.append([k,1])
+            parents_lv2.append([k, 1])
     return parents_lv2
 
 def compute_parents_lv2(parents_lv2, env, i, configuration, reward, common_term):
@@ -89,6 +89,8 @@ dict = find_optimal_arm(env)
 print(dict)
 
 
+
+
 while ucb.t < T:
 
     pulled_arms = ucb.pull_arm(env.prices, env.product_sold)
@@ -100,3 +102,5 @@ while ucb.t < T:
     ucb.update(pulled_arms, conversion, env.graph_probabilities, env.secondaries, env.lambda_p)
 
 
+Keymax = max(zip(dict.values(), dict.keys()))[1]
+print(Keymax)

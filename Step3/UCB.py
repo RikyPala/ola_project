@@ -70,6 +70,7 @@ class UCB():
                 self.confidence[i][a] = (2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
         print("CONFIDENCE")
         print(self.confidence)
+
         self.node_probabilities(graph_prob, secondaries, lamb, pulled_arms)
 
         difference = self.node_prob - self.expected_alpha_ratios[:3]
@@ -91,7 +92,7 @@ class UCB():
             print(contr_1)
             print("CONTRIBUTION2")
             print(contr_2)
-            self.marginal_reward[i][pulled_arms[i]] = contr_1+contr_2
+            self.marginal_reward[i][pulled_arms[i]] = (self.marginal_reward[i][pulled_arms[i]]*(self.pulled_rounds[i][pulled_arms[i]]-1)+(contr_1+contr_2))/self.pulled_rounds[i][pulled_arms[i]]
 
         self.t += 1
 
@@ -102,7 +103,7 @@ class UCB():
 
             if secondaries[k][0] == j:
                 total_contribution.append(graph_prob[k][j])
-            elif secondaries[k][1]:
+            elif secondaries[k][1] == j:
                 total_contribution.append(graph_prob[k][j]*lamb)
 
             print("TOTAL CONTRIBUTIONNN")
@@ -119,7 +120,7 @@ class UCB():
     def node_probabilities(self,graph_prob, secondaries, lamb, pulled_arms):
 
         tot_node_arrivals = np.zeros(3)
-        users_per_day = 100
+        users_per_day = 300
         for user in range(users_per_day):
 
             already_visited = np.zeros(3)

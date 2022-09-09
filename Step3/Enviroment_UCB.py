@@ -38,6 +38,8 @@ class Environment_UCB:
             [40, 30]
         ])
 
+        self.expected_alpha_ratios = np.array([0.2, 0.3, 0.1, 0.4])
+
     def draw_starting_page(self, alpha_ratios):
         product = np.random.choice(4, p= alpha_ratios)
         return product

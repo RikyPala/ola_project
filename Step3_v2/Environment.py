@@ -174,6 +174,7 @@ class Environment:
         conversion_rates = np.zeros(self.n_products)
         conversion_rates[~nan_idxs] = buyers[~nan_idxs] / visitors[~nan_idxs]
         rewards[~nan_idxs] = rewards[~nan_idxs] / visitors[~nan_idxs]
+        # put -1 in elements where there were no visitors to avoid NaN
         conversion_rates[nan_idxs] = -1
         rewards[nan_idxs] = -1
 

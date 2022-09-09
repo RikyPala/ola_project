@@ -27,7 +27,7 @@ for e in tqdm(range(n_experiments)):
 plt.figure(0)
 plt.xlabel("t")
 plt.ylabel("Cumulative Regrets")
-plt.figure(2)
+plt.figure(1)
 plt.xlabel("t")
 plt.ylabel("Cumulative Rewards")
 

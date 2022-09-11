@@ -12,25 +12,32 @@ class UCB():
         self.pulled_rounds = np.zeros((n_products, n_arms))
         self.empirical_means = np.zeros((n_products, n_arms))
         self.confidence = np.ones((n_products, n_arms))*np.inf
-        self.node_prob = np.zeros(3)
-        self.previous_pulled = np.zeros(3)
+        self.node_prob = np.zeros(self.n_products)
+        self.previous_pulled = np.zeros(self.n_products)
         self.t = 1
-        self.expected_alpha_ratios = np.array([0.2, 0.3, 0.1, 0.4])
-        self.marginal_reward = np.zeros((3,2))
-        self.prices = np.array([10, 20])
-        self.product_sold = np.array([
-            [40, 30],
-            [40, 30],
-            [40, 30]
+        self.expected_alpha_ratios = np.array([0.25, 0.15, 0.1, 0.05, 0.15, 0.3])
+        self.marginal_reward = np.zeros((self.n_products, self.n_arms))
+        self.prices = np.array([
+            [8.0, 14.0, 18.0, 25.0],
+            [4.0, 5.0, 8.0, 10.0],
+            [16.0, 22.0, 30.0, 40.0],
+            [10.0, 20.0, 25.0, 30.0],
+            [3.5, 7.0, 8.4, 10.0],
         ])
-
+        self.product_sold = np.array([
+            [20, 15, 10, 7],
+            [20, 18, 16, 13],
+            [25, 22, 20, 16],
+            [12, 10, 9, 7],
+            [30, 25, 20, 15]
+        ])
 
     def pull_arm(self, prices, products_sold):
 
-        upper_conf = self.empirical_means + self.confidence
+        upper_conf = self.empirical_means
         superarm = []
         for i in range(self.n_products):
-            dot = upper_conf[i]*prices
+            dot = upper_conf[i]*prices[i]
             print("DOTTTTTTT")
             print(dot)
             dot = dot * products_sold[i]
@@ -45,6 +52,7 @@ class UCB():
                 dot[self.previous_pulled[i]] += self.marginal_reward[i][self.previous_pulled[i]]
                 print("FINALL DOTTT")
                 print(dot)
+                dot = dot + self.confidence[i]
             j = np.random.choice(np.where(dot == dot.max())[0])
             self.pulled_rounds[i][j] += 1
             superarm.append(j)
@@ -54,8 +62,6 @@ class UCB():
         print("SUPERARM")
         print(superarm)
         return superarm
-
-
 
     def update(self, pulled_arms, conversion_rates, graph_prob, secondaries, lamb):
 
@@ -67,13 +73,13 @@ class UCB():
         for i in range(self.n_products):
             for a in range(self.n_arms):
                 n_samples = self.pulled_rounds[i][a]
-                self.confidence[i][a] = (2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
+                self.confidence[i][a] = 100*(2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
         print("CONFIDENCE")
         print(self.confidence)
 
         self.node_probabilities(graph_prob, secondaries, lamb, pulled_arms)
 
-        difference = self.node_prob - self.expected_alpha_ratios[:3]
+        difference = self.node_prob - self.expected_alpha_ratios[:self.n_products]
         print("DIFFERENCEEEE")
         print(difference[0])
 
@@ -82,10 +88,10 @@ class UCB():
             contr_2 = 0
             for j in range(self.n_products):
                 if secondaries[i][0] == j and difference[0][j] > 0:
-                    first = graph_prob[j, i]
+                    first = graph_prob[i, j]
                     contr_1 = self.compute_contribution(graph_prob, secondaries, i, j, lamb, first, difference[0], self.previous_pulled)
                 elif secondaries[i][1] == j and difference[0][j] > 0:
-                    second = graph_prob[j, i]*lamb
+                    second = graph_prob[i, j]*lamb
                     contr_2 = self.compute_contribution(graph_prob, secondaries, i, j, lamb, second, difference[0], self.previous_pulled)
 
             print("CONTRIBUTION1")
@@ -95,7 +101,6 @@ class UCB():
             self.marginal_reward[i][pulled_arms[i]] = (self.marginal_reward[i][pulled_arms[i]]*(self.pulled_rounds[i][pulled_arms[i]]-1)+(contr_1+contr_2))/self.pulled_rounds[i][pulled_arms[i]]
 
         self.t += 1
-
 
     def compute_contribution(self, graph_prob, secondaries, i, j, lamb, contribution, difference, pulled_arms):
         total_contribution = []
@@ -109,25 +114,23 @@ class UCB():
             print("TOTAL CONTRIBUTIONNN")
             print(total_contribution)
             print(np.sum(total_contribution))
-        margin_reward = difference[j]*self.empirical_means[j][pulled_arms[j]]*self.prices[pulled_arms[j]]* \
+        margin_reward = difference[j]*self.empirical_means[j][pulled_arms[j]]*self.prices[j][pulled_arms[j]]* \
                         self.product_sold[j][pulled_arms[j]]
         print(margin_reward)
 
         return (contribution / np.sum(total_contribution))*margin_reward
 
-
-
     def node_probabilities(self,graph_prob, secondaries, lamb, pulled_arms):
 
-        tot_node_arrivals = np.zeros(3)
-        users_per_day = 300
+        tot_node_arrivals = np.zeros(self.n_products)
+        users_per_day = 400
         for user in range(users_per_day):
 
-            already_visited = np.zeros(3)
+            already_visited = np.zeros(self.n_products)
             seed = self.simulate_starting_page()
-            if seed == 3:
+            if seed == self.n_products:
                 continue
-            live_edge_graph = np.zeros((3, 3))
+            live_edge_graph = np.zeros((self.n_products, self.n_products))
 
             start = seed
             frontier = []
@@ -186,9 +189,8 @@ class UCB():
         print("NODE PROB")
         print(self.node_prob)
 
-
     def simulate_starting_page(self):
-        product = np.random.choice(4, p=self.expected_alpha_ratios)
+        product = np.random.choice(self.n_products+1, p=self.expected_alpha_ratios)
         return product
 
 

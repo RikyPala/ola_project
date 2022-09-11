@@ -128,6 +128,8 @@ class Environment:
         daily_users = np.random.randint(10, 200)
         rewards = np.zeros(self.n_products, dtype=int)
         alpha_ratios = self.draw_alpha_ratios()
+        visitors = np.zeros(self.n_products)
+        buyers = np.zeros(self.n_products)
 
         for _ in range(daily_users):
 
@@ -142,12 +144,17 @@ class Environment:
                 current_product = to_visit.pop(0)
                 visited.append(current_product)
 
+                visitors[current_product] += 1
+
                 product_price = self.prices[pulled_arms[current_product]]
 
-                buy = np.random.binomial(1, self.conversion_rates[
-                    pulled_arms[current_product], current_product, user_type])
+                buy = np.random.binomial(
+                    1, self.conversion_rates[user_type, current_product, pulled_arms[current_product]])
+
                 if not buy:
                     continue
+
+                buyers[current_product] += 1
 
                 products_sold = np.random.randint(0, self.max_products_sold[current_product, user_type])
                 rewards[current_product] += product_price * products_sold
@@ -163,4 +170,12 @@ class Environment:
                 if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                     to_visit.append(secondary_2)
 
-        return rewards / daily_users
+        nan_idxs = (visitors == 0)
+        conversion_rates = np.zeros(self.n_products)
+        conversion_rates[~nan_idxs] = buyers[~nan_idxs] / visitors[~nan_idxs]
+        rewards[~nan_idxs] = rewards[~nan_idxs] / visitors[~nan_idxs]
+        # put -1 in elements where there were no visitors to avoid NaN
+        conversion_rates[nan_idxs] = -1
+        rewards[nan_idxs] = -1
+
+        return rewards, conversion_rates

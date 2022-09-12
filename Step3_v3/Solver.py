@@ -21,17 +21,20 @@ class Solver:
             (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities, axis=1),
             axis=0)
         self.lambda_p = env.lambda_p
-        self.alpha_ratios_parameters = np.sum(env.alpha_ratios_parameters, axis=0)
         self.graph_probabilities = np.sum(
             env.graph_probabilities * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
         self.secondaries = env.secondaries
 
-    def draw_alpha_ratios(self):
-        alpha_ratios = np.random.beta(self.alpha_ratios_parameters[:, 0], self.alpha_ratios_parameters[:, 1])
-        norm_factors = np.sum(alpha_ratios)
-        alpha_ratios = alpha_ratios / norm_factors
-        return alpha_ratios
+        self.alpha_ratios = np.sum(
+            self.avg_alpha_ratios(env.alpha_ratios_parameters) * np.expand_dims(env.user_probabilities, axis=1),
+            axis=0)
+
+    def avg_alpha_ratios(self, alpha_ratios_parameters):
+        alpha_ratios_avg = alpha_ratios_parameters[:, :, 0] / \
+                           (alpha_ratios_parameters[:, :, 0] + alpha_ratios_parameters[:, :, 1])
+        norm_factors = np.sum(alpha_ratios_avg, axis=1)
+        return (alpha_ratios_avg.T / norm_factors).T
 
     def draw_starting_page(self, alpha_ratios):
         product = np.random.choice(self.n_products + 1, p=alpha_ratios)
@@ -46,8 +49,7 @@ class Solver:
             self.prices[np.array(configuration)])
 
     def compute_node_probabilities(self, configuration):
-        daily_users = 100
-        alpha_ratios = self.draw_alpha_ratios()
+        daily_users = 200
 
         idxs1 = np.arange(self.n_products)
         idxs2 = self.secondaries[:, 0]
@@ -63,7 +65,7 @@ class Solver:
         for _ in range(daily_users):
             live_edge_graph = np.random.binomial(
                 1, adj_graph_probabilities * self.conversion_rates[idxs1, configuration])
-            start = self.draw_starting_page(alpha_ratios)
+            start = self.draw_starting_page(self.alpha_ratios)
             if start == 5:  # competitors' page
                 continue
             visited = []

@@ -3,11 +3,11 @@ import numpy as np
 
 class RoundData:
     def __init__(self, n_products):
-        self.configuration = np.zeros(n_products, d_type=int)
+        self.configuration = np.zeros(n_products, dtype=int)
         self.users = 0
-        self.visits = np.zeros(n_products, d_type=int)
-        self.conversions = np.zeros(n_products, d_type=int)
-        self.sales = np.zeros(n_products, d_type=int)
+        self.visits = np.zeros(n_products, dtype=int)
+        self.conversions = np.zeros(n_products, dtype=int)
+        self.sales = np.zeros(n_products, dtype=int)
         self.prod_rewards = np.zeros(n_products)
         self.reward = 0
 
@@ -152,7 +152,7 @@ class Environment:
                 product_price = self.prices[pulled_arms[current_product]]
 
                 buy = np.random.binomial(1, self.conversion_rates[
-                    pulled_arms[current_product], current_product, user_type])
+                    user_type, current_product, pulled_arms[current_product]])
                 if not buy:
                     continue
 

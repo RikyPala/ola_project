@@ -26,6 +26,7 @@ for i in range(100):
     print(round_data.visits / round_data.users)
     print("REWARD: " + str(round_data.reward))
     learner.update(round_data)
+    print("BEST: " + str(learner.best_reward))
 
 print("===========")
 print("===========")

@@ -24,7 +24,7 @@ class OptimizerTS:
         self.conversion_rates_data = np.full((self.n_products, self.n_arms, 2), 0.)
         self.conversion_rates_est = np.full((self.n_products, self.n_arms), 1.)
 
-        self.learner = TS((self.n_arms,) * self.n_products, gamma_rate=100., prior_mean=100.)
+        self.learner = TS((self.n_arms,) * self.n_products, gamma_rate=50000., prior_mean=500.)
         self.best_reward = 0.
 
     def avg_alpha_ratios(self, alpha_ratios_parameters):
@@ -86,7 +86,7 @@ class OptimizerTS:
             node_probabilities *
             self.conversion_rates_est[np.arange(self.n_products), configuration] *
             self.avg_products_sold *
-            self.prices[np.array(configuration)])
+            self.prices[np.arange(self.n_products), configuration])
 
     def update_conversion_rates(self, prod, price, visits, conversions):
         self.conversion_rates_data[prod, price, 0] += conversions
@@ -109,17 +109,18 @@ class OptimizerTS:
 
     def optimize_round(self):
         best_configuration = (0,)
-        best_reward = 0
+        best_reward = 0.
 
-        for _ in range(self.n_arms ^ self.n_products):
+        for _ in range(self.n_arms ** self.n_products):
             configuration = self.learner.pull()
             print(configuration)
             reward = self.evaluate_configuration(configuration)
             print(reward)
-            if reward > 0.8 * self.best_reward:
+            if reward > 0.85 * self.best_reward:
                 return configuration
             self.learner.update(configuration, reward)
             if reward > best_reward:
                 best_configuration = configuration
                 best_reward = reward
+
         return best_configuration

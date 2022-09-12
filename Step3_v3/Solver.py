@@ -5,9 +5,13 @@ from Environment import Environment
 
 class Solver:
     """
-    Best:
+    Env1:
     (3, 2, 1, 2, 1)
     50.28414782343751
+
+    Env2:
+    (1, 2, 0, 2, 1)
+    349.71367491562506
     """
 
     def __init__(self, env: Environment):
@@ -46,10 +50,10 @@ class Solver:
             node_probabilities *
             self.conversion_rates[np.arange(self.n_products), configuration] *
             self.avg_products_sold *
-            self.prices[np.array(configuration)])
+            self.prices[np.arange(self.n_products), configuration])
 
     def compute_node_probabilities(self, configuration):
-        daily_users = 200
+        daily_users = 1000
 
         idxs1 = np.arange(self.n_products)
         idxs2 = self.secondaries[:, 0]

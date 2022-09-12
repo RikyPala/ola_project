@@ -18,11 +18,11 @@ class UCB():
         self.expected_alpha_ratios = np.array([0.25, 0.15, 0.1, 0.05, 0.15, 0.3])
         self.marginal_reward = np.zeros((self.n_products, self.n_arms))
         self.prices = np.array([
-            [8.0, 14.0, 18.0, 25.0],
-            [4.0, 5.0, 8.0, 10.0],
-            [16.0, 22.0, 30.0, 40.0],
-            [10.0, 20.0, 25.0, 30.0],
-            [3.5, 7.0, 8.4, 10.0],
+            [80, 140, 180, 250],
+            [40, 50, 80, 100],
+            [160, 220, 300, 400],
+            [100, 200, 250, 300],
+            [35, 70, 84, 100],
         ])
         self.product_sold = np.array([
             [20, 15, 10, 7],
@@ -73,7 +73,7 @@ class UCB():
         for i in range(self.n_products):
             for a in range(self.n_arms):
                 n_samples = self.pulled_rounds[i][a]
-                self.confidence[i][a] = 100*(2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
+                self.confidence[i][a] = 500*(2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
         print("CONFIDENCE")
         print(self.confidence)
 
@@ -98,7 +98,7 @@ class UCB():
             print(contr_1)
             print("CONTRIBUTION2")
             print(contr_2)
-            self.marginal_reward[i][pulled_arms[i]] = (self.marginal_reward[i][pulled_arms[i]]*(self.pulled_rounds[i][pulled_arms[i]]-1)+(contr_1+contr_2))/self.pulled_rounds[i][pulled_arms[i]]
+            self.marginal_reward[i][pulled_arms[i]] += contr_1+contr_2
 
         self.t += 1
 

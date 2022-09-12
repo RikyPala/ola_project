@@ -5,7 +5,7 @@ import numpy as np
 
 ucb = UCB(5, 4)
 env = Environment_UCB()
-T = 20000
+T = 1000
 alpha_ratios = env.draw_alpha_ratios()
 
 
@@ -15,7 +15,7 @@ def find_optimal_arm_base(env):
     for configuration in itertools.product([0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]):
         configuration = np.asarray(configuration)
         reward = np.zeros(5)
-        for i in range(len(configuration)): # number of product
+        for i in range(len(configuration)):  # number of product
             common_term = env.conversion_rates[configuration[i]][i] * env.prices[i][configuration[i]] * env.product_sold[i][configuration[i]]
             reward[i] += env.expected_alpha_ratios[i]*common_term
         dict[''.join(map(str, configuration))] = np.sum(reward)

@@ -157,7 +157,7 @@ class Environment:
                     continue
 
                 result.conversions[current_product] += 1
-                products_sold = np.random.randint(1, self.max_products_sold[user_type, current_product])
+                products_sold = np.random.randint(1, self.max_products_sold[user_type, current_product] + 1)
                 result.sales[current_product] += products_sold
                 rewards[current_product] += product_price * products_sold
 

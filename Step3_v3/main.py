@@ -1,6 +1,6 @@
 import numpy as np
 
-from Environment import Environment, RoundData
+from Environment import Environment
 from OptimizerTS import OptimizerTS
 
 
@@ -15,13 +15,15 @@ round_data = env.round(configuration)
 print("REWARD: " + str(round_data.reward))
 learner.update(round_data)
 
-for _ in range(100):
+for i in range(100):
     print("===========")
     print("===========")
     configuration = learner.optimize_round()
     print("-")
+    print("ROUND: " + str(i))
     print("PLAY: " + str(configuration))
     round_data = env.round(configuration)
+    print(round_data.visits / round_data.users)
     print("REWARD: " + str(round_data.reward))
     learner.update(round_data)
 

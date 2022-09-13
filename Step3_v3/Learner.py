@@ -25,5 +25,5 @@ class Learner:
         return best_configuration
 
     @abstractmethod
-    def update(self):
+    def update(self, configuration, reward):
         pass

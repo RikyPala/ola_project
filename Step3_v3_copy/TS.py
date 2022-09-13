@@ -1,9 +1,7 @@
 ﻿import numpy as np
 
-from Learner import Learner
 
-
-class TSArm:
+class GaussianArm:
 
     def __init__(self, gamma_shape, gamma_rate, prior_mean):
         self.n = 0  # the number of times this arm has been pulled
@@ -25,7 +23,7 @@ class TSArm:
         return np.random.normal(self.mu_0, np.sqrt(estimated_variance))
 
     def update(self, x):
-        """ increase the number of times this arm has been pulled and improve the estimate of the
+        """ increase the number of times this arm has been pulles and improve the estimate of the
             mean and variance by combining the single new value 'x' with the current estimate """
         n = 1
         v = self.n
@@ -41,12 +39,24 @@ class TSArm:
         self.mu_0 = np.array(self.x).mean()
 
 
-class TS(Learner):
+class TS:
 
-    def __init__(self, arms_shape, arms, gamma_shape=1, gamma_rate=10, prior_mean=1):
+    def __init__(self, arms_shape, gamma_shape=1, gamma_rate=10, prior_mean=1):
         arms = []
         n_arms = np.zeros(arms_shape).size
         for _ in range(n_arms):
-            arms.append(TSArm(gamma_shape, gamma_rate, prior_mean))
-        arms = np.array(arms).reshape(arms_shape)
-        super().__init__(arms)
+            arms.append(GaussianArm(gamma_shape, gamma_rate, prior_mean))
+        self.arms = np.array(arms).reshape(arms_shape)
+
+    def pull(self):
+        best_configuration = (0,)
+        best_sample = 0
+        for idx, arm in np.ndenumerate(self.arms):
+            sample = arm.sample()
+            if sample > best_sample:
+                best_sample = sample
+                best_configuration = idx
+        return best_configuration
+
+    def update(self, configuration, reward):
+        self.arms[configuration].update(reward)

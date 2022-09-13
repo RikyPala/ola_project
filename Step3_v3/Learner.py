@@ -3,9 +3,9 @@ import numpy as np
 
 class Learner:
 
-    def __init__(self):
+    def __init__(self, arms):
         self.t = 0
-
+        self.arms = arms
     '''
     self.arms : array of Arm objects
     initialization in the specific class (UCS, TS)

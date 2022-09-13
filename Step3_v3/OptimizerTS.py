@@ -105,7 +105,7 @@ class OptimizerTS:
                                          round_data.visits[prod], round_data.conversions[prod])
         self.learner.update(round_data.configuration, round_data.reward)
         if round_data.reward > self.prev_reward:
-            self.prev_reward = (self.prev_reward + round_data.reward) / 2
+            self.prev_reward = (self.prev_reward + round_data.reward) / 2    #average between the two best reward so far
 
     def optimize_round(self):
         round_best_configuration = (0,)

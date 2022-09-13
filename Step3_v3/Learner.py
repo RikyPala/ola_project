@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import numpy as np
 
 
@@ -6,6 +8,7 @@ class Learner:
     def __init__(self, arms):
         self.t = 0
         self.arms = arms
+
     '''
     self.arms : array of Arm objects
     initialization in the specific class (UCS, TS)
@@ -21,7 +24,6 @@ class Learner:
                 best_configuration = idx
         return best_configuration
 
-    def update(self, configuration, reward):
-        self.t += 1
-        self.arms[configuration].update(reward)
-
+    @abstractmethod
+    def update(self):
+        pass

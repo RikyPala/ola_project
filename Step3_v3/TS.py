@@ -50,3 +50,6 @@ class TS(Learner):
             arms.append(TSArm(gamma_shape, gamma_rate, prior_mean))
         arms = np.array(arms).reshape(arms_shape)
         super().__init__(arms)
+
+    def update(self, configuration, reward):
+        self.arms[configuration].update(reward)

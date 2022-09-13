@@ -83,7 +83,7 @@ class Optimizer:
 
     def evaluate_configuration(self, configuration):
         node_probabilities = self.compute_node_probabilities(configuration)
-        print(node_probabilities)
+        # print(node_probabilities)
         return np.sum(
             node_probabilities *
             self.conversion_rates_est[np.arange(self.n_products), configuration] *
@@ -115,9 +115,9 @@ class Optimizer:
 
         for _ in range(self.n_arms ** self.n_products):
             configuration = self.learner.pull()
-            print(configuration)
+            # print(configuration)
             reward = self.evaluate_configuration(configuration)
-            print(reward)
+            # print(reward)
             if reward > self.threshold * self.prev_reward:
                 return configuration
             self.learner.update(configuration, reward)

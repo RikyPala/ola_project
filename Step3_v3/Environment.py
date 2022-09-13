@@ -133,7 +133,12 @@ class Environment:
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         return alpha_ratios
 
-    def round(self, pulled_arms):
+    def round(self, pulled_arms, seed=0):
+        s = seed
+        if seed == 0:
+            s = np.random.randint(1, 2**30)
+        np.random.seed(s)
+
         result = RoundData(self.n_products)
         result.configuration = pulled_arms
 

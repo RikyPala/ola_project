@@ -11,7 +11,7 @@ class Solver:
 
     Env2:
     (1, 2, 0, 2, 1)
-    349.71367491562506
+    333.5022328672501
     """
 
     def __init__(self, env: Environment):
@@ -53,7 +53,7 @@ class Solver:
             self.prices[np.arange(self.n_products), configuration])
 
     def compute_node_probabilities(self, configuration):
-        daily_users = 1000
+        daily_users = 10000
 
         idxs1 = np.arange(self.n_products)
         idxs2 = self.secondaries[:, 0]

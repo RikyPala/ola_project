@@ -25,7 +25,7 @@ class OptimizerTS:
         self.conversion_rates_est = np.full((self.n_products, self.n_arms), 1.)
 
         self.learner = TS((self.n_arms,) * self.n_products, gamma_rate=50000., prior_mean=500.)
-        self.best_reward = 0.
+        self.prev_reward = 0.
 
     def avg_alpha_ratios(self, alpha_ratios_parameters):
         alpha_ratios_avg = alpha_ratios_parameters[:, :, 0] / \
@@ -104,23 +104,23 @@ class OptimizerTS:
             self.update_conversion_rates(prod, round_data.configuration[prod],
                                          round_data.visits[prod], round_data.conversions[prod])
         self.learner.update(round_data.configuration, round_data.reward)
-        if round_data.reward > self.best_reward:
-            self.best_reward = round_data.reward
+        if round_data.reward > self.prev_reward:
+            self.prev_reward = (self.prev_reward + round_data.reward) / 2
 
     def optimize_round(self):
-        best_configuration = (0,)
-        best_reward = 0.
+        round_best_configuration = (0,)
+        round_best_reward = 0.
 
         for _ in range(self.n_arms ** self.n_products):
             configuration = self.learner.pull()
             print(configuration)
             reward = self.evaluate_configuration(configuration)
             print(reward)
-            if reward > 0.85 * self.best_reward:
+            if reward > 0.9 * self.prev_reward:
                 return configuration
             self.learner.update(configuration, reward)
-            if reward > best_reward:
-                best_configuration = configuration
-                best_reward = reward
+            if reward > round_best_reward:
+                round_best_configuration = configuration
+                round_best_reward = reward
 
-        return best_configuration
+        return round_best_configuration

@@ -43,7 +43,7 @@ class TSArm:
 
 class TS(Learner):
 
-    def __init__(self, arms_shape, arms, gamma_shape=1, gamma_rate=10, prior_mean=1):
+    def __init__(self, arms_shape, gamma_shape=1, gamma_rate=10, prior_mean=1):
         arms = []
         n_arms = np.zeros(arms_shape).size
         for _ in range(n_arms):

@@ -4,11 +4,24 @@ import matplotlib.pyplot as plt
 from Environment import Environment, RoundData
 from Optimizer import Optimizer
 from TS import TS
+from Step3.Solver import Solver
+from Solver import Solver as Solver1
 
 
 env = Environment()
+solver = Solver(env)
+solver1 = Solver1(env)
+dict = solver.find_optimal_arm()
+Keymax = max(zip(dict.values(), dict.keys()))[1]
+
+conf = solver1.optimize()
+print(conf)
+print(Keymax)
+print(dict)
+
+
 arms_shape = (env.n_arms,) * env.n_products
-T = 200
+T = 0
 best_configuration = (1, 2, 0, 2, 1)
 
 learner = Optimizer(env, TS(arms_shape, gamma_rate=50000., prior_mean=500.))

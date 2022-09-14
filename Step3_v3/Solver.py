@@ -53,7 +53,7 @@ class Solver:
             self.prices[np.arange(self.n_products), configuration])
 
     def compute_node_probabilities(self, configuration):
-        daily_users = 10000
+        daily_users = 50000
 
         idxs1 = np.arange(self.n_products)
         idxs2 = self.secondaries[:, 0]

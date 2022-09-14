@@ -4,25 +4,16 @@ import matplotlib.pyplot as plt
 from Environment import Environment, RoundData
 from Optimizer import Optimizer
 from TS import TS
-from Step3.Solver import Solver
-from Solver import Solver as Solver1
+from Solver import Solver
 
 
 env = Environment()
+
 solver = Solver(env)
-solver1 = Solver1(env)
-dict = solver.find_optimal_arm()
-Keymax = max(zip(dict.values(), dict.keys()))[1]
-
-conf = solver1.optimize()
-print(conf)
-print(Keymax)
-print(dict)
-
+optimal_configuration, optimal_reward = solver.find_optimal()
 
 arms_shape = (env.n_arms,) * env.n_products
-T = 0
-best_configuration = (1, 2, 0, 2, 1)
+T = 100
 
 learner = Optimizer(env, TS(arms_shape, gamma_rate=50000., prior_mean=500.))
 rounds = []
@@ -32,7 +23,7 @@ configuration = learner.initialize_configuration()
 
 seed = np.random.randint(1, 2**30)
 round_data = env.round(configuration, seed)
-optimal_round_data = env.round(best_configuration, seed)
+optimal_round_data = env.round(optimal_configuration, seed)
 
 learner.update(round_data)
 rounds.append(round_data)
@@ -49,7 +40,7 @@ for i in range(T):
 
     seed = np.random.randint(1, 2 ** 30)
     round_data = env.round(configuration, seed)
-    optimal_round_data = env.round(best_configuration, seed)
+    optimal_round_data = env.round(optimal_configuration, seed)
 
     learner.update(round_data)
     rounds.append(round_data)

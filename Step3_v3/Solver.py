@@ -1,112 +1,73 @@
-import itertools
 import numpy as np
+from tqdm.auto import tqdm
+
 from Environment import Environment
 
 
 class Solver:
-    """
-    Env1:
-    (3, 2, 1, 2, 1)
-    50.28414782343751
-
-    Env2:
-    (1, 2, 0, 2, 1)
-    333.5022328672501
-    """
 
     def __init__(self, env: Environment):
         self.n_products = env.n_products
         self.n_arms = env.n_arms
+
         self.prices = env.prices
         self.conversion_rates = np.sum(
             env.conversion_rates * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
+        self.lambda_p = env.lambda_p
+
         self.avg_products_sold = np.sum(
             (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities, axis=1),
             axis=0)
-        self.lambda_p = env.lambda_p
-        self.graph_probabilities = np.sum(
+
+        alpha_ratios_parameters = np.sum(env.alpha_ratios_parameters, axis=0)
+        self.expected_alpha_ratios = self.compute_expected_alpha_ratios(alpha_ratios_parameters)
+
+        graph_probabilities = np.sum(
             env.graph_probabilities * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
-        self.secondaries = env.secondaries
+        secondaries = env.secondaries
+        self.inverse_graph = self.compute_inverse_graph(secondaries, graph_probabilities)
 
-        self.alpha_ratios = np.sum(
-            self.avg_alpha_ratios(env.alpha_ratios_parameters) * np.expand_dims(env.user_probabilities, axis=1),
-            axis=0)
+    def compute_expected_alpha_ratios(self, alpha_ratios_parameters):
+        alpha_ratios_avg = alpha_ratios_parameters[:, 0] / \
+                           (alpha_ratios_parameters[:, 0] + alpha_ratios_parameters[:, 1])
+        norm_factors = np.sum(alpha_ratios_avg, axis=0)
+        return alpha_ratios_avg / norm_factors
 
-    def avg_alpha_ratios(self, alpha_ratios_parameters):
-        alpha_ratios_avg = alpha_ratios_parameters[:, :, 0] / \
-                           (alpha_ratios_parameters[:, :, 0] + alpha_ratios_parameters[:, :, 1])
-        norm_factors = np.sum(alpha_ratios_avg, axis=1)
-        return (alpha_ratios_avg.T / norm_factors).T
+    def compute_inverse_graph(self, secondaries, graph_probabilities):
+        inverse_graph = np.zeros((self.n_products, self.n_products))
+        inverse_graph[np.arange(self.n_products), secondaries[:, 0]] = \
+            graph_probabilities[np.arange(self.n_products), secondaries[:, 0]]  # primaries
+        inverse_graph[np.arange(self.n_products), secondaries[:, 1]] = \
+            graph_probabilities[np.arange(self.n_products), secondaries[:, 1]] * self.lambda_p  # secondaries
+        return inverse_graph.T
 
-    def draw_starting_page(self, alpha_ratios):
-        product = np.random.choice(self.n_products + 1, p=alpha_ratios)
-        return product
+    def find_optimal(self):
+        arms_shape = (self.n_arms,) * self.n_products
+        expected_reward_per_configuration = np.zeros(arms_shape)
+        for configuration, _ in tqdm(np.ndenumerate(expected_reward_per_configuration)):
+            rewards = np.zeros(self.n_products)
+            for start in range(self.n_products):
+                common_term = self.conversion_rates[start, configuration[start]] * \
+                              self.prices[start, configuration[start]] * \
+                              self.avg_products_sold[start]
+                rewards[start] = common_term * (self.expected_alpha_ratios[start] +
+                                                self.compute_children_contribute([start], configuration))
+            expected_reward_per_configuration[configuration] = np.sum(rewards)
+        optimal_configuration = np.unravel_index(np.argmax(expected_reward_per_configuration),
+                                                 expected_reward_per_configuration.shape)
+        optimal_reward = np.max(expected_reward_per_configuration)
+        return optimal_configuration, optimal_reward
 
-    def evaluate_configuration(self, configuration):
-        node_probabilities = self.compute_node_probabilities(configuration)
-        return np.sum(
-            node_probabilities *
-            self.conversion_rates[np.arange(self.n_products), configuration] *
-            self.avg_products_sold *
-            self.prices[np.arange(self.n_products), configuration])
-
-    def compute_node_probabilities(self, configuration):
-        daily_users = 50000
-
-        idxs1 = np.arange(self.n_products)
-        idxs2 = self.secondaries[:, 0]
-        idxs3 = self.secondaries[:, 1]
-
-        # all graph probabilities to 0 except those of the secondary products
-        adj_graph_probabilities = np.zeros((self.n_products, self.n_products))
-        adj_graph_probabilities[idxs1, idxs2] = self.graph_probabilities[idxs1, idxs2]
-        adj_graph_probabilities[idxs1, idxs3] = self.graph_probabilities[idxs1, idxs3] * self.lambda_p
-
-        node_visitors = np.zeros(self.n_products)
-
-        for _ in range(daily_users):
-            live_edge_graph = np.random.binomial(
-                1, adj_graph_probabilities * self.conversion_rates[idxs1, configuration])
-            start = self.draw_starting_page(self.alpha_ratios)
-            if start == 5:  # competitors' page
+    def compute_children_contribute(self, predecessors, configuration):
+        root = predecessors[-1]
+        contribute = 0
+        for child, prob in enumerate(self.inverse_graph[root]):
+            if prob == 0 or child in predecessors:
                 continue
-            visited = []
-            to_visit = [start]
-
-            while to_visit:
-                current_node = to_visit.pop(0)
-                visited.append(current_node)
-                node_visitors[current_node] += 1
-
-                secondary_1 = self.secondaries[current_node, 0]
-                if live_edge_graph[current_node, secondary_1] and \
-                        secondary_1 not in visited and secondary_1 not in to_visit:
-                    to_visit.append(secondary_1)
-
-                secondary_2 = self.secondaries[current_node, 1]
-                if live_edge_graph[current_node, secondary_2] and \
-                        secondary_2 not in visited and secondary_2 not in to_visit:
-                    to_visit.append(secondary_2)
-
-        node_probabilities = node_visitors / daily_users
-
-        return node_probabilities
-
-    def optimize(self):
-        best_reward = 0
-        best_configuration = np.zeros(self.n_products)
-
-        for configuration in itertools.product(range(self.n_arms), repeat=self.n_products):
-            reward = self.evaluate_configuration(configuration)
-            print(configuration)
-            print(reward)
-            if reward > best_reward:
-                best_reward = reward
-                best_configuration = configuration
-
-        print("\n\n\n")
-        print(best_configuration)
-        print(best_reward)
-        return best_configuration
+            contribute += prob * self.conversion_rates[child, configuration[child]] * (
+                    self.expected_alpha_ratios[child] +
+                    self.compute_children_contribute([*predecessors, child], configuration)
+            )
+        return contribute

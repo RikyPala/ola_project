@@ -32,7 +32,7 @@ for i in range(200):
     print("ROUND: " + str(i))
     print("PLAY: " + str(configuration))
     seed = np.random.randint(1, 2 ** 30)
-    round_data = env.round(configuration, seed)
+    round_data = env.round(configuration, seed) # non ha senso, meglio usare il valore deterministico del solver della nest configuration
     best_data = env.round(best_configuration, seed)
     print(round_data.visits / round_data.users)
     print("REWARD: " + str(round_data.reward))

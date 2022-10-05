@@ -12,10 +12,9 @@ env = Environment()
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()
 
-arms_shape = (env.n_arms,) * env.n_products
 T = 100
 
-learner = Optimizer(env, TS(arms_shape, gamma_rate=50000., prior_mean=500.))
+learner = Optimizer(env, TS(env))
 rounds = []
 optimal_rounds = []
 

@@ -7,9 +7,9 @@ class RoundData:
         self.users = 0
         self.visits = np.zeros(n_products, dtype=int)
         self.conversions = np.zeros(n_products, dtype=int)
-        self.sales = np.zeros(n_products, dtype=int)
-        self.prod_rewards = np.zeros(n_products)
-        self.reward = 0
+        # self.sales = np.zeros(n_products, dtype=int)
+        # self.prod_rewards = np.zeros(n_products)
+        # self.reward = 0
 
 
 class Environment:
@@ -59,9 +59,23 @@ class Environment:
              [0.53, 0.22, 0.00, 0.00]]
         ])
         self.max_products_sold = np.array([
-            [7, 10, 8, 6, 4],
-            [11, 8, 4, 5, 3],
-            [6, 7, 9, 9, 6]
+            [[50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30]],
+
+            [[50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30]],
+
+            [[50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30],
+             [50, 40, 35, 30]],
         ])
 
         # GRAPH VARIABLES
@@ -144,8 +158,8 @@ class Environment:
 
         daily_users = np.random.randint(500, 1000)
         result.users = daily_users
-        rewards = np.zeros(self.n_products, dtype=int)
         alpha_ratios = self.draw_alpha_ratios()
+        # rewards = np.zeros(self.n_products, dtype=int)
 
         for _ in range(daily_users):
             user_type = self.draw_user_type()
@@ -160,7 +174,7 @@ class Environment:
                 visited.append(current_product)
                 result.visits[current_product] += 1
 
-                product_price = self.prices[current_product, pulled_arms[current_product]]
+                # product_price = self.prices[current_product, pulled_arms[current_product]]
 
                 buy = np.random.binomial(1, self.conversion_rates[
                     user_type, current_product, pulled_arms[current_product]])
@@ -168,9 +182,9 @@ class Environment:
                     continue
 
                 result.conversions[current_product] += 1
-                products_sold = np.random.randint(1, self.max_products_sold[user_type, current_product] + 1)
-                result.sales[current_product] += products_sold
-                rewards[current_product] += product_price * products_sold
+                # products_sold = np.random.randint(1, self.max_products_sold[user_type, current_product] + 1)
+                # result.sales[current_product] += products_sold
+                # rewards[current_product] += product_price * products_sold
 
                 secondary_1 = self.secondaries[current_product, 0]
                 success_1 = np.random.binomial(1, self.graph_probabilities[user_type, current_product, secondary_1])
@@ -183,7 +197,7 @@ class Environment:
                 if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                     to_visit.append(secondary_2)
 
-        result.prod_rewards = rewards / daily_users
-        result.reward = np.sum(result.prod_rewards)
+        # result.prod_rewards = rewards / daily_users
+        # result.reward = np.sum(result.prod_rewards)
 
         return result

@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from Step3_v3.Environment import Environment, RoundData
+from Step3_v3.Environment import Environment
 
 
 class Learner:

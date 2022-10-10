@@ -11,7 +11,11 @@ env = Environment()
 
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()
-
+print("CONFIGURATION")
+print(optimal_configuration)
+print("REWARD")
+print(optimal_reward)
+"""
 T = 100
 
 learner = Optimizer(env, TS(env))
@@ -91,3 +95,4 @@ plt.ylabel("Cumulative Regrets")
 plt.plot(np.cumsum(optimal_rewards - rewards))
 
 plt.show()
+"""

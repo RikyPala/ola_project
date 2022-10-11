@@ -73,7 +73,7 @@ class UCB():
         for i in range(self.n_products):
             for a in range(self.n_arms):
                 n_samples = self.pulled_rounds[i][a]
-                self.confidence[i][a] = 500*(2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
+                self.confidence[i][a] = 100*(2*np.log(self.t+1)/n_samples)**0.5 if n_samples > 0 else np.inf
         print("CONFIDENCE")
         print(self.confidence)
 

@@ -4,24 +4,41 @@ import matplotlib.pyplot as plt
 from Environment import Environment, RoundData
 from Optimizer import Optimizer
 from TS import TS
+from UCB import UCB
+from Learner import Learner
 from Solver import Solver
+from Step3.Solver import Solver as Solv
+
 
 
 env = Environment()
-
+solv = Solv(env)
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()
-print("CONFIGURATION")
-print(optimal_configuration)
-print("REWARD")
-print(optimal_reward)
-"""
-T = 100
+print(solver.conversion_rates)
 
-learner = Optimizer(env, TS(env))
+print("OPTIMAL CONFIGURATION")
+print(optimal_configuration)
+print("OPTIMAL REWARD")
+print(optimal_reward)
+
+T = 5000
+
+
+ucb_learner = UCB(env)
 rounds = []
 optimal_rounds = []
 
+
+"""
+
+[[0.726575 0.625275 0.4214   0.3106  ]
+ [0.754775 0.595075 0.488025 0.1755  ]
+ [0.669275 0.491125 0.2106   0.1989  ]
+ [0.712075 0.62765  0.53295  0.089775]
+ [0.555175 0.4472   0.063    0.      ]]
+ 
+ 
 configuration = learner.initialize_configuration()
 
 seed = np.random.randint(1, 2**30)
@@ -36,11 +53,21 @@ print("ROUND: Initial")
 print("PLAYED: " + str(configuration))
 print("REWARD: " + str(round_data.reward))
 print("OPTIMAL REWARD: " + str(optimal_round_data.reward))
+"""
 
 for i in range(T):
+    pulled_arms = ucb_learner.pull()
+    data = env.round(pulled_arms)
+    ucb_learner.update(data)
 
-    configuration = learner.optimize_round()
 
+
+print("OPTIMAL CONFIGURATION")
+print(optimal_configuration)
+print("OPTIMAL REWARD")
+print(optimal_reward)
+
+"""
     seed = np.random.randint(1, 2 ** 30)
     round_data = env.round(configuration, seed)
     optimal_round_data = env.round(optimal_configuration, seed)
@@ -96,3 +123,7 @@ plt.plot(np.cumsum(optimal_rewards - rewards))
 
 plt.show()
 """
+dict = solv.find_optimal_arm()
+Keymax1 = max(zip(dict.values(), dict.keys()))[1]
+print(Keymax1)
+print(dict)

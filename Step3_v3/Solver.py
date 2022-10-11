@@ -14,9 +14,7 @@ class Solver:
         self.conversion_rates = np.sum(
             env.conversion_rates * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
-
         self.lambda_p = env.lambda_p
-
         self.avg_products_sold = np.sum(
             (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities,  axis=(1, 2)),
             axis=0)

@@ -13,7 +13,7 @@ class Solver:
             env.conversion_rates * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
         self.avg_products_sold = np.sum(
-            (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities, axis=1),
+            (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
         self.lambda_p = env.lambda_p
         self.alpha_ratios_parameters = np.sum(env.alpha_ratios_parameters, axis=0)
@@ -110,7 +110,7 @@ class Solver:
 
             for i in range(len(configuration)):  # number of product
                 common_term = self.conversion_rates[i][configuration[i]] * self.prices[i][configuration[i]] * \
-                              self.avg_products_sold[i]
+                              self.avg_products_sold[i][configuration[i]]
 
                 reward[i] += expected_alpha_ratios[i] * common_term
                 level = 1

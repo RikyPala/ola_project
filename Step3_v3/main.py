@@ -127,3 +127,8 @@ dict = solv.find_optimal_arm()
 Keymax1 = max(zip(dict.values(), dict.keys()))[1]
 print(Keymax1)
 print(dict)
+
+print("OPTIMAL CONFIGURATION")
+print(optimal_configuration)
+print("OPTIMAL REWARD")
+print(optimal_reward)

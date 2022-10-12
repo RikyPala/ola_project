@@ -21,7 +21,7 @@ class Learner:
             env.graph_probabilities * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0
         )
-        self.n_simulations = 500
+        self.n_simulations = 300
         self.marginal_rewards = np.zeros((env.n_products, env.n_arms))
         self.empirical_means = np.zeros((env.n_products, env.n_arms))
         self.secondaries = env.secondaries

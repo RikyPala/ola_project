@@ -32,8 +32,8 @@ class UCB(Learner):
                 contribution = self.empirical_means[prod][configuration[prod]] * from_prod_to_node[prod][temp] \
                                                                      * self.empirical_means[temp][configuration[temp]] * self.prices[temp][configuration[temp]] \
                                                                      * self.max_products_sold[temp][configuration[temp]]
-                self.marginal_rewards[prod][configuration[prod]] += (self.empirical_means[prod][configuration[prod]] * \
-                                                                     (self.pulled_rounds[prod][configuration[prod]]-1) + contribution) / self.pulled_rounds[prod][configuration[prod]]
+                self.marginal_rewards[prod][configuration[prod]] += contribution #(self.empirical_means[prod][configuration[prod]] * \
+                                                                     #(self.pulled_rounds[prod][configuration[prod]]-1) + contribution) / self.pulled_rounds[prod][configuration[prod]]
         print("MARGINAL REWARDS")
         print(self.marginal_rewards)
 

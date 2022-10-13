@@ -51,10 +51,8 @@ class Solver:
                 common_term = self.conversion_rates[start, configuration[start]] * \
                               self.prices[start, configuration[start]] * \
                               self.avg_products_sold[start, configuration[start]]
-                rewards[start] = common_term \
-                                 * (self.expected_alpha_ratios[start] +\
-
-                                self.compute_children_contribute([start], configuration))
+                rewards[start] = common_term * (self.expected_alpha_ratios[start] +
+                                                self.compute_children_contribute([start], configuration))
             expected_reward_per_configuration[configuration] = np.sum(rewards)
         optimal_configuration = np.unravel_index(np.argmax(expected_reward_per_configuration),
                                                  expected_reward_per_configuration.shape)

@@ -1,11 +1,11 @@
 import numpy as np
 from Environment import Environment, RoundData
-from TS import TS
+from Learner import Learner
 
 
-class OptimizerTS:
+class Optimizer:
 
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, learner: Learner):
         self.n_products = env.n_products
         self.n_arms = env.n_arms
         self.prices = env.prices
@@ -24,8 +24,10 @@ class OptimizerTS:
         self.conversion_rates_data = np.full((self.n_products, self.n_arms, 2), 0.)
         self.conversion_rates_est = np.full((self.n_products, self.n_arms), 1.)
 
-        self.learner = TS((self.n_arms,) * self.n_products, gamma_rate=50000., prior_mean=500.)
+        self.learner = learner
         self.prev_reward = 0.
+
+        self.threshold = 0.9
 
     def avg_alpha_ratios(self, alpha_ratios_parameters):
         alpha_ratios_avg = alpha_ratios_parameters[:, :, 0] / \
@@ -81,7 +83,7 @@ class OptimizerTS:
 
     def evaluate_configuration(self, configuration):
         node_probabilities = self.compute_node_probabilities(configuration)
-        print(node_probabilities)
+        # print(node_probabilities)
         return np.sum(
             node_probabilities *
             self.conversion_rates_est[np.arange(self.n_products), configuration] *
@@ -103,9 +105,9 @@ class OptimizerTS:
         for prod in range(self.n_products):
             self.update_conversion_rates(prod, round_data.configuration[prod],
                                          round_data.visits[prod], round_data.conversions[prod])
-        self.learner.update(round_data.configuration, round_data.reward)
+        self.learner.update(round_data)
         if round_data.reward > self.prev_reward:
-            self.prev_reward = (self.prev_reward + round_data.reward) / 2    #average between the two best reward so far
+            self.prev_reward = (self.prev_reward + round_data.reward) / 2
 
     def optimize_round(self):
         round_best_configuration = (0,)
@@ -113,10 +115,10 @@ class OptimizerTS:
 
         for _ in range(self.n_arms ** self.n_products):
             configuration = self.learner.pull()
-            print(configuration)
+            # print(configuration)
             reward = self.evaluate_configuration(configuration)
-            print(reward)
-            if reward > 0.9 * self.prev_reward:
+            # print(reward)
+            if reward > self.threshold * self.prev_reward:
                 return configuration
             self.learner.update(configuration, reward)
             if reward > round_best_reward:

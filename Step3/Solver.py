@@ -1,6 +1,7 @@
-import itertools
 import numpy as np
-import Environment as Environment
+from tqdm.auto import tqdm
+
+from Environment import Environment
 
 
 class Solver:
@@ -8,144 +9,64 @@ class Solver:
     def __init__(self, env: Environment):
         self.n_products = env.n_products
         self.n_arms = env.n_arms
+
         self.prices = env.prices
         self.conversion_rates = np.sum(
             env.conversion_rates * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
-        self.avg_products_sold = np.sum(
-            (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities, axis=(1, 2)),
-            axis=0)
         self.lambda_p = env.lambda_p
-        self.alpha_ratios_parameters = np.sum(env.alpha_ratios_parameters, axis=0)
-        self.graph_probabilities = np.sum(
+        self.avg_products_sold = np.sum(
+            (env.max_products_sold + 1) / 2 * np.expand_dims(env.user_probabilities,  axis=(1, 2)),
+            axis=0)
+
+        alpha_ratios_parameters = np.sum(env.alpha_ratios_parameters, axis=0)
+        self.expected_alpha_ratios = self.compute_expected_alpha_ratios(alpha_ratios_parameters)
+
+        graph_probabilities = np.sum(
             env.graph_probabilities * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
-        self.secondaries = env.secondaries
+        secondaries = env.secondaries
+        self.inverse_graph = self.compute_inverse_graph(secondaries, graph_probabilities)
 
-    def avg_alpha_ratios(self):
-        alpha_ratios_avg = self.alpha_ratios_parameters[:, 0] / \
-                           (self.alpha_ratios_parameters[:,0] + self.alpha_ratios_parameters[:,1])
+    def compute_expected_alpha_ratios(self, alpha_ratios_parameters):
+        alpha_ratios_avg = alpha_ratios_parameters[:, 0] / \
+                           (alpha_ratios_parameters[:, 0] + alpha_ratios_parameters[:, 1])
         norm_factors = np.sum(alpha_ratios_avg, axis=0)
-        print( alpha_ratios_avg / norm_factors)
         return alpha_ratios_avg / norm_factors
 
-    def find_parents_lv(self, parents_lv, configuration, reward, level,  expected_alpha_ratios):
-        parents_next = []
-        if level == 1:
-            for k in range(len(configuration)):
-                if self.secondaries[k][0] == parents_lv[0]:
-                    ca = self.conversion_rates[k][configuration[k]] * \
-                         self.graph_probabilities[k][parents_lv[0]] * parents_lv[level]
-                    reward[parents_lv[level-1]] += ca * expected_alpha_ratios[k]
-                    parents_next.append([k, parents_lv[0], ca])
-                elif self.secondaries[k][1] == parents_lv[0]:
-                    ca = self.conversion_rates[k][configuration[k]] * \
-                         self.lambda_p * self.graph_probabilities[k][parents_lv[0]] * parents_lv[level]
-                    reward[parents_lv[level-1]] += ca * expected_alpha_ratios[k]
-                    parents_next.append([k, parents_lv[0], ca])
-            return parents_next
-        elif level == 2:
-            for parent in parents_lv:
-                for k in range(len(configuration)):
-                    if self.secondaries[k][0] == parent[0] and k != parent[1]:
+    def compute_inverse_graph(self, secondaries, graph_probabilities):
+        inverse_graph = np.zeros((self.n_products, self.n_products))
+        inverse_graph[np.arange(self.n_products), secondaries[:, 0]] = \
+            graph_probabilities[np.arange(self.n_products), secondaries[:, 0]]  # primaries
+        inverse_graph[np.arange(self.n_products), secondaries[:, 1]] = \
+            graph_probabilities[np.arange(self.n_products), secondaries[:, 1]] * self.lambda_p  # secondaries
+        return inverse_graph.T
 
-                        ca = self.conversion_rates[k][configuration[k]] * self.graph_probabilities[k][parent[0]] * \
-                             parent[level]
-                        reward[parent[level-1]] += expected_alpha_ratios[k] * ca
-                        parents_next.append([k, parent[0], parent[level-1], ca])
+    def find_optimal(self):
+        arms_shape = (self.n_arms,) * self.n_products
+        expected_reward_per_configuration = np.zeros(arms_shape)
+        for configuration, _ in tqdm(np.ndenumerate(expected_reward_per_configuration)):
+            rewards = np.zeros(self.n_products)
+            for start in range(self.n_products):
+                common_term = self.conversion_rates[start, configuration[start]] * \
+                              self.prices[start, configuration[start]] * \
+                              self.avg_products_sold[start, configuration[start]]
+                rewards[start] = common_term * (self.expected_alpha_ratios[start] +
+                                                self.compute_children_contribute([start], configuration))
+            expected_reward_per_configuration[configuration] = np.sum(rewards)
+        optimal_configuration = np.unravel_index(np.argmax(expected_reward_per_configuration),
+                                                 expected_reward_per_configuration.shape)
+        optimal_reward = np.max(expected_reward_per_configuration)
+        return optimal_configuration, optimal_reward
 
-                    elif self.secondaries[k][1] == parent[0] and k != parent[1]:
-
-                        ca = self.conversion_rates[k][configuration[k]] * self.graph_probabilities[k][
-                            parent[0]] * self.lambda_p * parent[2]
-                        reward[parent[level-1]] += expected_alpha_ratios[k] * ca
-                        parents_next.append([k, parent[0], parent[level-1], ca])
-            return parents_next
-        elif level == 3:
-            for parent in parents_lv:
-                for k in range(len(configuration)):
-
-                    if self.secondaries[k][0] == parent[0] and k != parent[1] and k != parent[2]:
-
-                        ca = self.conversion_rates[k][configuration[k]] * self.graph_probabilities[k][parent[0]] * \
-                             parent[level]
-                        reward[parent[level-1]] += expected_alpha_ratios[k] * ca
-                        parents_next.append([k, parent[0], parent[1], parent[level-1], ca])
-
-                    elif self.secondaries[k][1] == parent[0] and k != parent[1] and k != parent[2]:
-
-                        ca = self.conversion_rates[k][configuration[k]] * self.graph_probabilities[k][parent[0]] * self.lambda_p * parent[level]
-                        reward[parent[level-1]] += expected_alpha_ratios[k] * ca
-                        parents_next.append([k, parent[0], parent[1], parent[level-1], ca])
-            return parents_next
-        elif level == 4:
-            for parent in parents_lv:
-                for k in range(len(configuration)):
-
-                    if self.secondaries[k][0] == parent[0] and k != parent[1] and k != parent[2] and k != parent[3]:
-
-                        ca = self.conversion_rates[k][configuration[k]] * self.graph_probabilities[k][parent[0]] * \
-                             parent[4]
-                        reward[parent[level-1]] += expected_alpha_ratios[k] * ca
-                        parents_next.append([k, parent[0], parent[1], parent[2], parent[3], ca])
-
-                    elif self.secondaries[k][1] == parent[0] and k != parent[1] and k != parent[2] and k != parent[3]:
-
-                        ca = self.conversion_rates[k][configuration[k]] * self.graph_probabilities[k][
-                            parent[0]] * self.lambda_p * parent[level]
-                        reward[parent[level-1]] += expected_alpha_ratios[k] * ca
-                        parents_next.append([k, parent[0], parent[1], parent[2], parent[3], ca])
-            return parents_next
-
-
-
-    def find_optimal_arm(self):
-        # print(''.join(map(str,configuration)))ù
-        expected_alpha_ratios = self.avg_alpha_ratios()
-        dict = {}
-        for configuration in itertools.product([0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]):
-
-            configuration = np.asarray(configuration)
-            reward = np.zeros(5)
-
-            for i in range(len(configuration)):  # number of product
-                common_term = self.conversion_rates[i][configuration[i]] * self.prices[i][configuration[i]] * \
-                              self.avg_products_sold[i][configuration[i]]
-
-                reward[i] += expected_alpha_ratios[i] * common_term
-                level = 1
-                parents_lv = [i, common_term]
-                while parents_lv:
-                    parents_lv = self.find_parents_lv(parents_lv, configuration, reward, level, expected_alpha_ratios)
-                    level += 1
-
-            dict[''.join(map(str, configuration))] = np.sum(reward)
-
-        return dict
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def compute_children_contribute(self, predecessors, configuration):
+        root = predecessors[-1]
+        contribute = 0
+        for child, prob in enumerate(self.inverse_graph[root]):
+            if prob == 0 or child in predecessors:
+                continue
+            contribute += prob * self.conversion_rates[child, configuration[child]] * (
+                    self.expected_alpha_ratios[child] +
+                    self.compute_children_contribute([*predecessors, child], configuration)
+            )
+        return contribute

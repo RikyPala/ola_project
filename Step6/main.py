@@ -3,20 +3,22 @@ import matplotlib.pyplot as plt
 from CUMSUM_UCB import CUMSUM_UCB
 from NonStationaryEnvironment import Environment
 
-# from Solver import Solver
+from Solver import Solver
 
 
-# solver = Solver(env)
-# optimal_configuration, optimal_reward = solver.find_optimal()
-# print(solver.conversion_rates)
+T = 1000
+env = Environment(T)
+solver = Solver(env)
+optimal_configuration, optimal_reward = solver.find_optimal()
+print(solver.conversion_rates)
+
 
 print("OPTIMAL CONFIGURATION")
-# print(optimal_configuration)
+print(optimal_configuration)
 print("OPTIMAL REWARD")
-# print(optimal_reward)
+print(optimal_reward)
 
-T = 100
-env = Environment(T)
+
 ucb_learner = CUMSUM_UCB(env)
 ucb_rounds = []
 
@@ -30,16 +32,15 @@ for i in range(T):
     ucb_learner.update(ucb_round_data)
     ucb_rounds.append(ucb_round_data)
 
-    # optimal_round_data = env.round(optimal_configuration, seed)
-    # optimal_rounds.append(optimal_round_data)
+    optimal_round_data = env.round(optimal_configuration, seed)
+    optimal_rounds.append(optimal_round_data)
 
     print("\nROUND: " + str(i + 1))
     print("--------------------UCB---------------------")
     print("PLAYED: " + str(ucb_configuration))
     print("REWARD: " + str(ucb_round_data.reward))
-    print("--------------------TS----------------------")
     print("------------------OPTIMAL-------------------")
-    # print("REWARD: " + str(optimal_round_data.reward))
+    print("REWARD: " + str(optimal_round_data.reward))
 
 print("\n###################################################")
 

@@ -7,7 +7,7 @@ from NonStationaryEnvironment import RoundData, Environment
 
 class Learner:
 
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, alpha=0.1):
 
         self.n_products = env.n_products
         self.n_arms = env.n_arms
@@ -25,13 +25,19 @@ class Learner:
         self.marginal_rewards = np.zeros((env.n_products, env.n_arms))
         self.secondaries = env.secondaries
         self.pulled_rounds = np.zeros((self.n_products, self.n_arms))
+        self.alpha = alpha
 
     def pull(self):
-        exp_conversion_rates = self.sample()
-        exp_rewards = exp_conversion_rates * self.prices * self.max_products_sold + self.marginal_rewards
-        configuration = np.argmax(exp_rewards, axis=1)
-        self.pulled_rounds[np.arange(self.n_products), configuration] += 1
-        return configuration
+        if np.random.binomial(1, 1 - self.alpha):
+            exp_conversion_rates = self.sample()
+            exp_rewards = exp_conversion_rates * self.prices * self.max_products_sold + self.marginal_rewards
+            configuration = np.argmax(exp_rewards, axis=1)
+            self.pulled_rounds[np.arange(self.n_products), configuration] += 1
+            return configuration
+        else:
+            configuration = np.random.randint(0, self.n_arms, self.n_products)
+            return configuration
+
 
     @abstractmethod
     def update(self, results):

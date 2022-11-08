@@ -20,7 +20,7 @@ class SW_UCB(Learner):
         exp_conversion_rates = self.sample()
         exp_rewards = exp_conversion_rates * self.prices * self.max_products_sold + self.marginal_rewards
         configuration = np.argmax(exp_rewards, axis=1)
-        # differenza da step3: pulled rounds non può essere aggiornato nello stesso modo
+        # pulled rounds non può essere aggiornato nello stesso modo dello step3
         # metterlo in update anzichè in pull per rendere il metodo pull generale
         return configuration
 

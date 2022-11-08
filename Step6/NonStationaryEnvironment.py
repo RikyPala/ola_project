@@ -44,22 +44,22 @@ class Environment:
         ])
         self.conversion_rates = np.array([
             [[[0.77, 0.72, 0.56, 0.37],  # PHASE 1
-             [0.80, 0.58, 0.45, 0.00],
-             [0.62, 0.40, 0.00, 0.00],
-             [0.67, 0.62, 0.51, 0.00],
-             [0.55, 0.53, 0.00, 0.00]],
+              [0.80, 0.58, 0.45, 0.00],
+              [0.62, 0.40, 0.00, 0.00],
+              [0.67, 0.62, 0.51, 0.00],
+              [0.55, 0.53, 0.00, 0.00]],
 
-            [[0.81, 0.75, 0.72, 0.68],
-             [0.68, 0.49, 0.32, 0.00],
-             [0.58, 0.31, 0.00, 0.00],
-             [0.77, 0.65, 0.60, 0.57],
-             [0.62, 0.58, 0.40, 0.00]],
+             [[0.81, 0.75, 0.72, 0.68],
+              [0.68, 0.49, 0.32, 0.00],
+              [0.58, 0.31, 0.00, 0.00],
+              [0.77, 0.65, 0.60, 0.57],
+              [0.62, 0.58, 0.40, 0.00]],
 
-            [[0.60, 0.38, 0.00, 0.00],
-             [0.71, 0.68, 0.65, 0.60],
-             [0.81, 0.76, 0.72, 0.68],
-             [0.76, 0.63, 0.54, 0.00],
-             [0.53, 0.22, 0.00, 0.00]]],
+             [[0.60, 0.38, 0.00, 0.00],
+              [0.71, 0.68, 0.65, 0.60],
+              [0.81, 0.76, 0.72, 0.68],
+              [0.76, 0.63, 0.54, 0.00],
+              [0.53, 0.22, 0.00, 0.00]]],
 
             [[[0.77, 0.72, 0.56, 0.37],  # PHASE 2
               [0.80, 0.58, 0.45, 0.00],
@@ -114,7 +114,6 @@ class Environment:
               [0.81, 0.76, 0.72, 0.68],
               [0.76, 0.63, 0.54, 0.00],
               [0.53, 0.22, 0.00, 0.00]]],
-
 
         ])
         self.max_products_sold = np.array([
@@ -171,6 +170,14 @@ class Environment:
             [3, 2]
         ])
 
+    def create_graph_probabilities(self, full_weights: bool = True):
+        low = 0.05 if full_weights else 0.0
+        high = 0.75
+        graph_prob = np.random.uniform(low, high, (self.n_user_types, self.n_products, self.n_products))
+        diag_idx = np.arange(self.n_products)
+        graph_prob[:, diag_idx, diag_idx] = 0
+        return graph_prob
+
     def draw_user_type(self):
         """
         Example
@@ -211,7 +218,7 @@ class Environment:
         current_phase = int(self.t / self.phases_size)
         s = seed
         if seed == 0:
-            s = np.random.randint(1, 2**30)
+            s = np.random.randint(1, 2 ** 30)
         np.random.seed(s)
 
         result = RoundData(self.n_products)
@@ -237,7 +244,8 @@ class Environment:
 
                 product_price = self.prices[current_product, pulled_arms[current_product]]
 
-                buy = np.random.binomial(1, self.conversion_rates[current_phase, user_type, current_product, pulled_arms[current_product]])
+                buy = np.random.binomial(1, self.conversion_rates[
+                    current_phase, user_type, current_product, pulled_arms[current_product]])
                 if not buy:
                     continue
 

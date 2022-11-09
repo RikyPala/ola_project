@@ -123,7 +123,7 @@
 
   "lambda": 0.8,
 
-  "alpha_ratio_parameters": [
+  "alpha_ratios_parameters": [
     [ [3, 7],
       [10, 2],
       [5, 6],

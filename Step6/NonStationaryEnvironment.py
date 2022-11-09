@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 
 class RoundData:
@@ -14,16 +15,19 @@ class RoundData:
 
 class Environment:
     def __init__(self, horizon):
-        self.n_products = 5
-        self.n_arms = 4
-        self.n_user_types = 3
-        self.n_phases = 4
+        filepath = '../json/ns_environment.json'
+        with open(filepath, 'r', encoding='utf_8') as stream:
+            env_features = json.load(stream)
+
+        self.n_products = env_features['num_products']
+        self.n_arms = env_features['num_arms']
+        self.n_user_types = env_features['num_user_types']
+        self.n_phases = env_features['num_phases']
         self.phases_size = horizon / self.n_phases
         self.t = 0
 
         # REWARDS VARIABLES
-
-        self.feature_probabilities = np.array([0.45, 0.65])
+        self.feature_probabilities = np.array(env_features['feature_probabilities'])
         """
         User types:
             0 -> FALSE *
@@ -34,141 +38,15 @@ class Environment:
             (1 - self.feature_probabilities[0]),
             (self.feature_probabilities[0]) * (1 - self.feature_probabilities[1]),
             (self.feature_probabilities[0]) * (self.feature_probabilities[1])])
-
-        self.prices = np.array([
-            [80, 140, 180, 250],
-            [40, 50, 80, 100],
-            [160, 220, 300, 700],
-            [100, 150, 250, 900],
-            [35, 70, 84, 100]
-        ])
-        self.conversion_rates = np.array([
-            [[[0.77, 0.72, 0.56, 0.37],  # PHASE 1
-              [0.80, 0.58, 0.45, 0.00],
-              [0.62, 0.40, 0.00, 0.00],
-              [0.67, 0.62, 0.51, 0.00],
-              [0.55, 0.53, 0.00, 0.00]],
-
-             [[0.81, 0.75, 0.72, 0.68],
-              [0.68, 0.49, 0.32, 0.00],
-              [0.58, 0.31, 0.00, 0.00],
-              [0.77, 0.65, 0.60, 0.57],
-              [0.62, 0.58, 0.40, 0.00]],
-
-             [[0.60, 0.38, 0.00, 0.00],
-              [0.71, 0.68, 0.65, 0.60],
-              [0.81, 0.76, 0.72, 0.68],
-              [0.76, 0.63, 0.54, 0.00],
-              [0.53, 0.22, 0.00, 0.00]]],
-
-            [[[0.77, 0.72, 0.56, 0.37],  # PHASE 2
-              [0.80, 0.58, 0.45, 0.00],
-              [0.62, 0.40, 0.00, 0.00],
-              [0.67, 0.62, 0.51, 0.00],
-              [0.55, 0.53, 0.00, 0.00]],
-
-             [[0.81, 0.75, 0.72, 0.68],
-              [0.68, 0.49, 0.32, 0.00],
-              [0.58, 0.31, 0.00, 0.00],
-              [0.77, 0.65, 0.60, 0.57],
-              [0.62, 0.58, 0.40, 0.00]],
-
-             [[0.60, 0.38, 0.00, 0.00],
-              [0.71, 0.68, 0.65, 0.60],
-              [0.81, 0.76, 0.72, 0.68],
-              [0.76, 0.63, 0.54, 0.00],
-              [0.53, 0.22, 0.00, 0.00]]],
-
-            [[[0.77, 0.72, 0.56, 0.37],  # PHASE 3
-              [0.80, 0.58, 0.45, 0.00],
-              [0.62, 0.40, 0.00, 0.00],
-              [0.67, 0.62, 0.51, 0.00],
-              [0.55, 0.53, 0.00, 0.00]],
-
-             [[0.81, 0.75, 0.72, 0.68],
-              [0.68, 0.49, 0.32, 0.00],
-              [0.58, 0.31, 0.00, 0.00],
-              [0.77, 0.65, 0.60, 0.57],
-              [0.62, 0.58, 0.40, 0.00]],
-
-             [[0.60, 0.38, 0.00, 0.00],
-              [0.71, 0.68, 0.65, 0.60],
-              [0.81, 0.76, 0.72, 0.68],
-              [0.76, 0.63, 0.54, 0.00],
-              [0.53, 0.22, 0.00, 0.00]]],
-
-            [[[0.77, 0.72, 0.56, 0.37],  # PHASE 4
-              [0.80, 0.58, 0.45, 0.00],
-              [0.62, 0.40, 0.00, 0.00],
-              [0.67, 0.62, 0.51, 0.00],
-              [0.55, 0.53, 0.00, 0.00]],
-
-             [[0.81, 0.75, 0.72, 0.68],
-              [0.68, 0.49, 0.32, 0.00],
-              [0.58, 0.31, 0.00, 0.00],
-              [0.77, 0.65, 0.60, 0.57],
-              [0.62, 0.58, 0.40, 0.00]],
-
-             [[0.60, 0.38, 0.00, 0.00],
-              [0.71, 0.68, 0.65, 0.60],
-              [0.81, 0.76, 0.72, 0.68],
-              [0.76, 0.63, 0.54, 0.00],
-              [0.53, 0.22, 0.00, 0.00]]],
-
-        ])
-        self.max_products_sold = np.array([
-            [[50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30]],
-
-            [[50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30]],
-
-            [[50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30],
-             [50, 40, 35, 30]],
-        ])
+        self.prices = np.array(env_features['prices'])
+        self.conversion_rates = np.array(env_features['conversion_rates'])
+        self.max_products_sold = np.array(env_features['max_products_sold'])
 
         # GRAPH VARIABLES
-        self.lambda_p = 0.8
-        self.alpha_ratios_parameters = np.array([
-            [[3, 7], [10, 2], [5, 6], [3, 3], [25, 13], [13, 2]],
-            [[13, 15], [12, 20], [8, 6], [9, 3], [10, 12], [10, 3]],
-            [[10, 7], [3, 12], [14, 17], [15, 8], [11, 6], [8, 3]]
-        ])
-        self.graph_probabilities = np.array([
-            [[0, 0.40, 0.35, 0.40, 0.10],
-             [0.30, 0, 0.25, 0.10, 0.15],
-             [0.35, 0.15, 0, 0.20, 0.30],
-             [0.10, 0.05, 0.20, 0, 0.15],
-             [0.10, 0.30, 0.25, 0.10, 0]],
-
-            [[0, 0.20, 0.50, 0.15, 0.45],
-             [0.25, 0, 0.30, 0.40, 0.10],
-             [0.45, 0.15, 0, 0.65, 0.15],
-             [0.55, 0.50, 0.35, 0, 0.65],
-             [0.15, 0.60, 0.35, 0.40, 0]],
-
-            [[0, 0.25, 0.20, 0.45, 0.15],
-             [0.35, 0, 0.10, 0.55, 0.50],
-             [0.60, 0.45, 0, 0.50, 0.10],
-             [0.15, 0.15, 0.35, 0, 0.10],
-             [0.15, 0.25, 0.10, 0.55, 0]]
-        ])
-        self.secondaries = np.array([
-            [1, 4],
-            [2, 0],
-            [0, 3],
-            [4, 1],
-            [3, 2]
-        ])
+        self.lambda_p = env_features['lambda']
+        self.alpha_ratios_parameters = np.array(env_features['alpha_ratios_parameters'])
+        self.graph_probabilities = np.array(env_features['graph_probabilities'])
+        self.secondaries = np.array(env_features['secondaries'])
 
     def create_graph_probabilities(self, full_weights: bool = True):
         low = 0.05 if full_weights else 0.0

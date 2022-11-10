@@ -15,6 +15,7 @@ class TS(Learner):
         idxs = np.arange(self.n_products)
         self.beta_parameters[idxs, configuration, 0] += results.conversions
         self.beta_parameters[idxs, configuration, 1] += results.visits - results.conversions
+        self.update_marginal_reward(configuration)
 
     def sample(self):
         return np.random.beta(self.beta_parameters[:, :, 0], self.beta_parameters[:, :, 1])

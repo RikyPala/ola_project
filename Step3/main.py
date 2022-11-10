@@ -13,7 +13,7 @@ print(solver.conversion_rates)
 
 print("OPTIMAL CONFIGURATION")
 print(optimal_configuration)
-print("OPTIMAL REWARD")
+print("OPTIMAL A-PRIORI REWARD")
 print(optimal_reward)
 
 T = 100

@@ -1,6 +1,4 @@
 import numpy as np
-from tqdm.auto import tqdm
-
 from Environment import Environment
 
 
@@ -45,7 +43,7 @@ class Solver:
     def find_optimal(self):
         arms_shape = (self.n_arms,) * self.n_products
         expected_reward_per_configuration = np.zeros(arms_shape)
-        for configuration, _ in tqdm(np.ndenumerate(expected_reward_per_configuration)):
+        for configuration, _ in np.ndenumerate(expected_reward_per_configuration):
             rewards = np.zeros(self.n_products)
             for start in range(self.n_products):
                 common_term = self.conversion_rates[start, configuration[start]] * \

@@ -85,7 +85,7 @@ class Learner:
         for prod in range(self.n_products):
             old_marginal_reward = self.marginal_rewards[prod, configuration[prod]]
             marginal_reward = np.sum(
-                self.get_means()[idxs, configuration[prod]] *
+                self.get_means()[prod, configuration[prod]] *
                 reaching_probabilities[prod] *
                 self.get_means()[idxs, configuration] *
                 self.prices[idxs, configuration] *

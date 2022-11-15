@@ -19,7 +19,7 @@ class Learner:
         self.alpha_ratios_data = np.full((self.n_products + 1, 2), 0.)
         self.alpha_ratios_est = np.full(self.n_products + 1, 1. / (self.n_products + 1))
         self.avg_products_sold_data = np.full((self.n_products, self.n_arms, 2), 0.)
-        self.avg_products_sold_est = np.full((self.n_products, self.n_arms), 100.)
+        self.avg_products_sold_est = np.full((self.n_products, self.n_arms), np.inf)
 
         self.n_simulations = 300
         self.marginal_rewards = np.zeros((env.n_products, env.n_arms))
@@ -28,7 +28,9 @@ class Learner:
 
     def pull(self):
         exp_conversion_rates = self.sample()
-        exp_rewards = exp_conversion_rates * self.prices * self.avg_products_sold_est + self.marginal_rewards
+        alpha_ratios = np.array([self.alpha_ratios_est[:self.n_products]] * self.n_arms).transpose()
+        exp_rewards = alpha_ratios * \
+            (exp_conversion_rates * self.prices * self.avg_products_sold_est + self.marginal_rewards)
         configuration = np.argmax(exp_rewards, axis=1)
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1
         return configuration
@@ -82,7 +84,7 @@ class Learner:
     def update_alpha_ratios(self, results: RoundData):
         self.alpha_ratios_data[:self.n_products, 0] += results.first_clicks
         self.alpha_ratios_data[self.n_products, 0] += results.users - np.sum(results.first_clicks)
-        self.alpha_ratios_data[:, 1] += results
+        self.alpha_ratios_data[:, 1] += results.users
         self.alpha_ratios_est = self.alpha_ratios_data[:, 0] / self.alpha_ratios_data[:, 1]
 
     def update_avg_products_sold(self, configuration, results: RoundData):
@@ -95,7 +97,6 @@ class Learner:
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)
-        reaching_probabilities *= self.alpha_ratios_est[:self.n_products]
         idxs = np.arange(self.n_products)
         for prod in range(self.n_products):
             old_marginal_reward = self.marginal_rewards[prod, configuration[prod]]

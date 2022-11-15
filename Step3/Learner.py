@@ -26,7 +26,9 @@ class Learner:
 
     def pull(self):
         exp_conversion_rates = self.sample()
-        exp_rewards = exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards
+        alpha_ratios = np.array([self.draw_alpha_ratios()[:self.n_products]] * self.n_arms).transpose()
+        exp_rewards = alpha_ratios * \
+            (exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards)
         configuration = np.argmax(exp_rewards, axis=1)
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1
         return configuration
@@ -44,9 +46,9 @@ class Learner:
         pass
 
     def draw_alpha_ratios(self):
-        alpha_ratios = np.random.beta(self.alpha_ratios_parameters[:, 0], self.alpha_ratios_parameters[:, 1])
-        alpha_ratios /= np.sum(alpha_ratios)
-        return alpha_ratios
+        alpha = self.alpha_ratios_parameters[:, 0]
+        beta = self.alpha_ratios_parameters[:, 1]
+        return alpha / (alpha + beta)
 
     def compute_reaching_probabilities(self, configuration):
         reaches = np.zeros((self.n_products, self.n_products))
@@ -84,7 +86,6 @@ class Learner:
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)
-        reaching_probabilities *= self.draw_alpha_ratios()[:self.n_products]
         idxs = np.arange(self.n_products)
         for prod in range(self.n_products):
             old_marginal_reward = self.marginal_rewards[prod, configuration[prod]]

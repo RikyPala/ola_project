@@ -26,7 +26,7 @@ class UCB(Learner):
             for arm in range(self.n_arms):
                 n = self.pulled_rounds[prod, arm]
                 self.confidence[prod, arm] = self.c * (np.log(self.t) / n) ** 0.5 if n > 0 else np.inf
-        self.update_estimates(configuration, results)
+        self.update_marginal_reward(configuration)
 
     def sample(self):
         return self.empirical_means + self.confidence

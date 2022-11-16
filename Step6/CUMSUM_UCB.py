@@ -7,14 +7,14 @@ from NonStationaryEnvironment import Environment, RoundData
 
 class CUMSUM_UCB(Learner):
 
-    def __init__(self, env: Environment, M = 100, eps = 0.05, h=20):
+    def __init__(self, env: Environment, M = 100, eps = 0.05, h=20, alpha=0.1):
         super().__init__(env)
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
         self.change_detection = self.init_change_detection(M, eps, h)
-        self.detections = [[[] for _ in range(self.n_arms)] for _ in range(self.n_products)]
         self.valid_rewards_per_arms = [[[] for _ in range(self.n_arms)] for _ in range(self.n_products)]
         self.t = 0
+        self.alpha = alpha
 
     def init_change_detection(self, M, eps, h):
         change_detection = [[] for _ in range(self.n_products)]
@@ -36,27 +36,31 @@ class CUMSUM_UCB(Learner):
 
         for prod in range(self.n_products):
             if self.change_detection[prod][pulled_arm[prod]].update(data, pulled_arm[prod]): # If this if is okay it means that there was an abrupt change, so we detect it and we reset all the CUMSUM parameters
-                self.detections[prod][pulled_arm[prod]].append(self.t)
                 self.valid_rewards_per_arms[prod][pulled_arm[prod]] = [[[] for _ in range(self.n_arms)] for _ in range(self.n_products)]
-                self.pulled_rounds = np.zeros((self.n_products, self.n_arms))
+                self.pulled_rounds[prod][pulled_arm[prod]] = 0
                 self.change_detection[prod][pulled_arm[prod]].reset()
+                self.marginal_rewards[prod][pulled_arm[prod]] = 0
 
             mean_est = data.conversions[prod]/data.visits[prod]
-            self.update_observations(pulled_arm, mean_est, prod)
+            self.valid_rewards_per_arms[prod][pulled_arm[prod]].append(mean_est)
             self.empirical_means[prod][pulled_arm[prod]] = np.mean(self.valid_rewards_per_arms[prod][pulled_arm[prod]])
-            total_valid_samples = self.compute_total_valid_samples()
+            total_valid_samples = np.sum(self.pulled_rounds[prod])
             for a in range(self.n_arms):
                 n_samples = self.pulled_rounds[prod][a]
                 self.confidence[prod][a] = (2*np.log(total_valid_samples)/n_samples)**0.5 if n_samples >0 else np.inf
         self.update_marginal_reward(pulled_arm)
 
-    def compute_total_valid_samples(self):
-        total_valid_samples = 0
-        for prod in range(self.n_products):
-            for arm in range(self.n_arms):
-                total_valid_samples += len(self.valid_rewards_per_arms[prod][arm])
-        return total_valid_samples
+    def pull(self):
+        if np.random.binomial(1, 1 - self.alpha):
+            exp_conversion_rates = self.sample()
+            exp_rewards = exp_conversion_rates * self.prices * self.max_products_sold + self.marginal_rewards
+            configuration = np.argmax(exp_rewards, axis=1)
+            self.pulled_rounds[np.arange(self.n_products), configuration] += 1
+            return configuration
+        else:
+            configuration = np.random.randint(0, self.n_arms, self.n_products)
+            return configuration
 
-    def update_observations(self, pulled_arm, reward, prod):
-        self.valid_rewards_per_arms[prod][pulled_arm[prod]].append(reward)
+
+
 

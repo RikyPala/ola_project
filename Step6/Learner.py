@@ -7,7 +7,7 @@ from NonStationaryEnvironment import RoundData, Environment
 
 class Learner:
 
-    def __init__(self, env: Environment, alpha=0.1):
+    def __init__(self, env: Environment):
 
         self.n_products = env.n_products
         self.n_arms = env.n_arms
@@ -25,19 +25,11 @@ class Learner:
         self.marginal_rewards = np.zeros((env.n_products, env.n_arms))
         self.secondaries = env.secondaries
         self.pulled_rounds = np.zeros((self.n_products, self.n_arms))
-        self.alpha = alpha
 
+
+    @abstractmethod
     def pull(self):
-        if np.random.binomial(1, 1 - self.alpha):
-            exp_conversion_rates = self.sample()
-            exp_rewards = exp_conversion_rates * self.prices * self.max_products_sold + self.marginal_rewards
-            configuration = np.argmax(exp_rewards, axis=1)
-            self.pulled_rounds[np.arange(self.n_products), configuration] += 1
-            return configuration
-        else:
-            configuration = np.random.randint(0, self.n_arms, self.n_products)
-            return configuration
-
+        pass
 
     @abstractmethod
     def update(self, results):
@@ -91,7 +83,7 @@ class Learner:
         for prod in range(self.n_products):
             old_marginal_reward = self.marginal_rewards[prod, configuration[prod]]
             marginal_reward = np.sum(
-                self.get_means()[idxs, configuration[prod]] *
+                self.get_means()[prod, configuration[prod]] *
                 reaching_probabilities[prod] *
                 self.get_means()[idxs, configuration] *
                 self.prices[idxs, configuration] *

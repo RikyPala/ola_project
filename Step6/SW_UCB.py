@@ -5,7 +5,7 @@ from NonStationaryEnvironment import Environment, RoundData
 
 class SW_UCB(Learner):
 
-    def __init__(self, env: Environment, window_size):
+    def __init__(self, env: Environment, window_size=10):
         super().__init__(env)
         self.t = 0
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf

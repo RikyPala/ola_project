@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm.auto import tqdm
 
 from NonStationaryEnvironment import Environment
 
@@ -11,12 +10,8 @@ class Solver:
         self.n_arms = env.n_arms
 
         self.prices = env.prices
-        self.mean_conversions = np.mean(env.conversion_rates, axis=0)
-        print(env.conversion_rates.shape)
-        print(self.mean_conversions)
-        print(self.mean_conversions.shape)
-        self.conversion_rates = np.sum(
-            self.mean_conversions * np.expand_dims(env.user_probabilities, axis=(1, 2)),
+        self.conversion_rates = np.sum(  # before aggregate, compute the mean of values of the different phases
+            np.mean(env.conversion_rates, axis=0) * np.expand_dims(env.user_probabilities, axis=(1, 2)),
             axis=0)
         self.lambda_p = env.lambda_p
         self.avg_products_sold = np.sum(
@@ -49,7 +44,7 @@ class Solver:
     def find_optimal(self):
         arms_shape = (self.n_arms,) * self.n_products
         expected_reward_per_configuration = np.zeros(arms_shape)
-        for configuration, _ in tqdm(np.ndenumerate(expected_reward_per_configuration)):
+        for configuration, _ in np.ndenumerate(expected_reward_per_configuration):
             rewards = np.zeros(self.n_products)
             for start in range(self.n_products):
                 common_term = self.conversion_rates[start, configuration[start]] * \

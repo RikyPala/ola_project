@@ -4,18 +4,18 @@ from NonStationaryEnvironment import RoundData
 class CUMSUM:
 
     def __init__(self, M, eps, h):
-        self.M = M     # first samples to calculate the reference point
-        self.eps = eps  # epsilon is in the formula of the deviation from the reference
-        self.h = h     # upper and lower bound for an abrupt change
-        self.reference = 0 # reference is the empirical mean over the first m samples
+        self.M = M          # first samples to calculate the reference point
+        self.eps = eps      # epsilon is in the formula of the deviation from the reference
+        self.h = h          # upper and lower bound for an abrupt change
+        self.reference = 0  # reference is the empirical mean over the first m samples
         self.t = 0
         self.g_plus = 0     # cumulative positive deviation of an arm until time t
-        self.g_minus = 0   # cumulative negative deviation of an arm until time t
+        self.g_minus = 0    # cumulative negative deviation of an arm until time t
 
-    def update(self, data: RoundData, arm):  # sample= sampled mean (expected reward)
+    def update(self, data: RoundData, arm):  # sample = sampled mean (expected reward)
         self.t += 1
         if self.t <= self.M:
-            self.reference += (data.conversions[arm] / data.visits[arm])/self.M
+            self.reference += (data.conversions[arm] / data.visits[arm]) / self.M
             return 0
         else:
             s_plus = ((data.conversions[arm] / data.visits[arm]) - self.reference) - self.eps

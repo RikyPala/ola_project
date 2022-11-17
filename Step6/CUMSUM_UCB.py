@@ -7,7 +7,7 @@ from NonStationaryEnvironment import Environment, RoundData
 
 class CUMSUM_UCB(Learner):
 
-    def __init__(self, env: Environment, M = 100, eps = 0.05, h=20, alpha=0.1):
+    def __init__(self, env: Environment, M=100, eps=0.05, h=20, alpha=0.1):
         super().__init__(env)
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
@@ -35,19 +35,22 @@ class CUMSUM_UCB(Learner):
         pulled_arm = data.configuration
 
         for prod in range(self.n_products):
-            if self.change_detection[prod][pulled_arm[prod]].update(data, pulled_arm[prod]): # If this if is okay it means that there was an abrupt change, so we detect it and we reset all the CUMSUM parameters
-                self.valid_rewards_per_arms[prod][pulled_arm[prod]] = [[[] for _ in range(self.n_arms)] for _ in range(self.n_products)]
+            if self.change_detection[prod][pulled_arm[prod]].update(data, pulled_arm[prod]):
+                # If this is okay, it means that there was an abrupt change.
+                # then we detect it, finally we reset all the CUMSUM parameters
+                self.valid_rewards_per_arms[prod][pulled_arm[prod]] = [[[] for _ in range(self.n_arms)]
+                                                                       for _ in range(self.n_products)]
                 self.pulled_rounds[prod][pulled_arm[prod]] = 0
                 self.change_detection[prod][pulled_arm[prod]].reset()
                 self.marginal_rewards[prod][pulled_arm[prod]] = 0
 
-            mean_est = data.conversions[prod]/data.visits[prod]
-            self.valid_rewards_per_arms[prod][pulled_arm[prod]].append(mean_est)
+            self.valid_rewards_per_arms[prod][pulled_arm[prod]].append(data.conversions[prod]/data.visits[prod])
             self.empirical_means[prod][pulled_arm[prod]] = np.mean(self.valid_rewards_per_arms[prod][pulled_arm[prod]])
             total_valid_samples = np.sum(self.pulled_rounds[prod])
             for a in range(self.n_arms):
                 n_samples = self.pulled_rounds[prod][a]
-                self.confidence[prod][a] = (2*np.log(total_valid_samples)/n_samples)**0.5 if n_samples >0 else np.inf
+                self.confidence[prod][a] = (2 * np.log(total_valid_samples)/n_samples) ** 0.5 if n_samples > 0 \
+                    else np.inf
         self.update_marginal_reward(pulled_arm)
 
     def pull(self):

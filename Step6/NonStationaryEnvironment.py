@@ -91,7 +91,7 @@ class Environment:
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         return alpha_ratios
 
-    def round(self, pulled_arms, seed=0):
+    def round(self, pulled_arms, seed=0, new_round=False):
 
         current_phase = int(self.t / self.phases_size)
         s = seed
@@ -146,5 +146,6 @@ class Environment:
 
         result.prod_rewards = rewards / daily_users
         result.reward = np.sum(result.prod_rewards)
+        self.t += 1 if new_round else 0
 
         return result

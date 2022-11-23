@@ -27,9 +27,8 @@ class Learner:
 
     def pull(self):
         exp_conversion_rates = self.sample()
-        alpha_ratios = np.array([self.draw_alpha_ratios()[:self.n_products]] * self.n_arms).transpose()
-        exp_rewards = alpha_ratios * \
-            (exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards)
+        alpha_ratios = np.array([self.get_expected_alpha_ratios()[:self.n_products]] * self.n_arms).transpose()
+        exp_rewards = (exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards) * alpha_ratios
         configuration = np.argmax(exp_rewards, axis=1)
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1
         return configuration
@@ -46,7 +45,7 @@ class Learner:
     def get_means(self):
         pass
 
-    def draw_alpha_ratios(self):
+    def get_expected_alpha_ratios(self):
         alpha = self.alpha_ratios_parameters[:, 0]
         beta = self.alpha_ratios_parameters[:, 1]
         return alpha / (alpha + beta)
@@ -78,7 +77,7 @@ class Learner:
                 to_visit.append(secondary_1)
 
             secondary_2 = self.secondaries[current_product, 1]
-            # no self.lambda_p (already in estimation)
+            # no self.lambda_p (already in estimation) TODO
             success_2 = np.random.binomial(1, self.graph_probabilities_est[current_product, secondary_2])
             if success_2 and visited[secondary_2] == 0 and secondary_2 not in to_visit:
                 to_visit.append(secondary_2)
@@ -89,8 +88,8 @@ class Learner:
         self.graph_probabilities_data += results.secondary_visits
         self.graph_probabilities_est = np.divide(
             self.graph_probabilities_data[:, :, 0], self.graph_probabilities_data[:, :, 1],
-            out = np.zeros_like(self.graph_probabilities_est),
-            where = self.graph_probabilities_data[:, :, 1] != 0)
+            out=np.zeros_like(self.graph_probabilities_est),  # TODO
+            where=self.graph_probabilities_data[:, :, 1] != 0)
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)

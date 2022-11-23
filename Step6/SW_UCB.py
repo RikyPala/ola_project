@@ -18,7 +18,9 @@ class SW_UCB(Learner):
 
     def pull(self):
         exp_conversion_rates = self.sample()
-        exp_rewards = exp_conversion_rates * self.prices * self.max_products_sold + self.marginal_rewards
+        alpha_ratios = np.array([self.get_expected_alpha_ratios()[:self.n_products]] * self.n_arms).transpose()
+        exp_rewards = \
+            (exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards) * alpha_ratios
         configuration = np.argmax(exp_rewards, axis=1)
         return configuration
 

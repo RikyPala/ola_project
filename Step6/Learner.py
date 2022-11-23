@@ -12,20 +12,17 @@ class Learner:
         self.n_products = env.n_products
         self.n_arms = env.n_arms
         self.prices = env.prices
-        self.max_products_sold = np.mean(
-            env.max_products_sold * np.expand_dims(env.user_probabilities, axis=(1, 2)),
-            axis=0)
+        self.avg_products_sold = np.mean(
+            env.max_products_sold * np.expand_dims(env.user_probabilities, axis=(1, 2)), axis=0) / 2.0
         self.lambda_p = env.lambda_p
         self.alpha_ratios_parameters = np.sum(env.alpha_ratios_parameters, axis=0)
         self.graph_probabilities = np.sum(
-            env.graph_probabilities * np.expand_dims(env.user_probabilities, axis=(1, 2)),
-            axis=0
-        )
+            env.graph_probabilities * np.expand_dims(env.user_probabilities, axis=(1, 2)), axis=0)
+
         self.n_simulations = 300
         self.marginal_rewards = np.zeros((env.n_products, env.n_arms))
         self.secondaries = env.secondaries
         self.pulled_rounds = np.zeros((self.n_products, self.n_arms))
-
 
     @abstractmethod
     def pull(self):
@@ -42,6 +39,11 @@ class Learner:
     @abstractmethod
     def get_means(self):
         pass
+
+    def get_expected_alpha_ratios(self):
+        alpha = self.alpha_ratios_parameters[:, 0]
+        beta = self.alpha_ratios_parameters[:, 1]
+        return alpha / (alpha + beta)
 
     def compute_reaching_probabilities(self, configuration):
         reaches = np.zeros((self.n_products, self.n_products))
@@ -87,8 +89,8 @@ class Learner:
                 reaching_probabilities[prod] *
                 self.get_means()[idxs, configuration] *
                 self.prices[idxs, configuration] *
-                self.max_products_sold[idxs, configuration]
+                self.avg_products_sold[idxs, configuration]
             )
             n_pulls = self.pulled_rounds[prod, configuration[prod]]
             self.marginal_rewards[prod, configuration[prod]] = \
-                (old_marginal_reward * (n_pulls - 1) + marginal_reward) / n_pulls
+                (old_marginal_reward * (n_pulls - 1) + marginal_reward) / n_pulls if n_pulls > 0 else 0

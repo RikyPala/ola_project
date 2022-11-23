@@ -26,7 +26,7 @@ class Learner:
 
     def pull(self):
         exp_conversion_rates = self.sample()
-        alpha_ratios = np.array([self.draw_alpha_ratios()[:self.n_products]] * self.n_arms).transpose()
+        alpha_ratios = np.array([self.get_expected_alpha_ratios()[:self.n_products]] * self.n_arms).transpose()
         exp_rewards = alpha_ratios * \
             (exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards)
         configuration = np.argmax(exp_rewards, axis=1)
@@ -45,7 +45,7 @@ class Learner:
     def get_means(self):
         pass
 
-    def draw_alpha_ratios(self):
+    def get_expected_alpha_ratios(self):
         alpha = self.alpha_ratios_parameters[:, 0]
         beta = self.alpha_ratios_parameters[:, 1]
         return alpha / (alpha + beta)

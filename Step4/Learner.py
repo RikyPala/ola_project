@@ -18,6 +18,7 @@ class Learner:
 
         self.alpha_ratios_data = np.full((self.n_products + 1, 2), 0)
         self.alpha_ratios_est = np.full(self.n_products + 1, 1. / (self.n_products + 1))
+
         self.avg_products_sold_data = np.full((self.n_products, self.n_arms, 2), 0)
         self.avg_products_sold_est = np.full((self.n_products, self.n_arms), np.inf)
 

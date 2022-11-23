@@ -6,7 +6,7 @@ from CUMSUM_UCB import CUMSUM_UCB
 from SW_UCB import SW_UCB
 from Solver import Solver
 
-T = 100
+T = 280
 env = Environment(T)
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()

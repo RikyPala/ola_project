@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from NonStationaryEnvironment import Environment
+from NonStationaryEnvironment import NonStationaryEnvironment
 from CUMSUM_UCB import CUMSUM_UCB
 from SW_UCB import SW_UCB
 from Solver import Solver
 
 T = 280
-env = Environment(T)
+env = NonStationaryEnvironment(T)
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()
 print(solver.conversion_rates)

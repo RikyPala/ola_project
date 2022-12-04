@@ -2,12 +2,12 @@ from abc import abstractmethod
 
 import numpy as np
 
-from NonStationaryEnvironment import RoundData, Environment
+from NonStationaryEnvironment import RoundData, NonStationaryEnvironment
 
 
 class Learner:
 
-    def __init__(self, env: Environment):
+    def __init__(self, env: NonStationaryEnvironment):
 
         self.n_products = env.n_products
         self.n_arms = env.n_arms

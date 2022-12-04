@@ -13,7 +13,7 @@ class RoundData:
         self.prod_rewards = np.zeros(n_products)
 
 
-class Environment:
+class NonStationaryEnvironment:
     def __init__(self, horizon):
         filepath = '../json/ns_environment.json'
         with open(filepath, 'r', encoding='utf_8') as stream:

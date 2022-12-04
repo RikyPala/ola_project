@@ -1,11 +1,11 @@
 import numpy as np
 from Learner import Learner
-from NonStationaryEnvironment import Environment, RoundData
+from NonStationaryEnvironment import NonStationaryEnvironment, RoundData
 
 
 class SW_UCB(Learner):
 
-    def __init__(self, env: Environment, window_size=10):
+    def __init__(self, env: NonStationaryEnvironment, window_size=10):
         super().__init__(env)
         self.t = 0
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf

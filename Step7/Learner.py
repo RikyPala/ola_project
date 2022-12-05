@@ -2,28 +2,30 @@ from abc import abstractmethod
 import numpy as np
 
 from Environment import Environment, RoundData
+from RoundsHistory import RoundsHistory
 
 
 class Learner:
 
-    def __init__(self, env: Environment, feature_1=None, feature_2=None, prev_data=None):
+    def __init__(self, env: Environment, feature_1=None, feature_2=None):
 
         self.n_products = env.n_products
         self.n_arms = env.n_arms
         self.prices = env.prices
         self.lambda_p = env.lambda_p
 
-        agg_classes = []
+        self.agg_classes = []
         if feature_1 is None or not feature_1:
-            agg_classes.append(0)
+            self.agg_classes.append(0)
         if feature_2 is None or not feature_2:
-            agg_classes.append(1)
+            self.agg_classes.append(1)
         if feature_2 is None or feature_2:
-            agg_classes.append(2)
+            self.agg_classes.append(2)
 
         self.graph_probabilities = np.sum(
-            env.graph_probabilities[agg_classes] * np.expand_dims(env.user_probabilities[agg_classes], axis=(1, 2)),
-            axis=0) / np.sum(env.user_probabilities[agg_classes])
+            env.graph_probabilities[self.agg_classes] * np.expand_dims(env.user_probabilities[self.agg_classes],
+                                                                       axis=(1, 2)),
+            axis=0) / np.sum(env.user_probabilities[self.agg_classes])
 
         self.alpha_ratios_data = np.full((self.n_products + 1, 2), 0)
         self.alpha_ratios_est = np.full(self.n_products + 1, 1. / (self.n_products + 1))
@@ -36,6 +38,9 @@ class Learner:
         self.secondaries = env.secondaries
         self.pulled_rounds = np.zeros((self.n_products, self.n_arms))
 
+        for round_data in RoundsHistory.history:
+            self.update(round_data)
+
     def pull(self):
         exp_conversion_rates = self.sample()
         alpha_ratios = np.array([self.alpha_ratios_est[:self.n_products]] * self.n_arms).transpose()
@@ -46,7 +51,7 @@ class Learner:
         return configuration
 
     @abstractmethod
-    def update(self, results):
+    def update(self, round_data):
         pass
 
     @abstractmethod
@@ -56,6 +61,12 @@ class Learner:
     @abstractmethod
     def get_means(self):
         pass
+
+    def get_configuration_by_agg_classes(self, ctx_configs):
+        for ctx_config in ctx_configs:
+            if all(clss in ctx_config.agg_classes for clss in self.agg_classes):
+                return ctx_config.configuration
+        raise AssertionError('Aggregated classes not found in the contexts')
 
     def compute_reaching_probabilities(self, configuration):
         reaches = np.zeros((self.n_products, self.n_products))
@@ -91,12 +102,14 @@ class Learner:
 
         return visited
 
+    #  TODO
     def update_alpha_ratios(self, results: RoundData):
         self.alpha_ratios_data[:self.n_products, 0] += results.first_clicks
         self.alpha_ratios_data[self.n_products, 0] += results.users - np.sum(results.first_clicks)
         self.alpha_ratios_data[:, 1] += results.users
         self.alpha_ratios_est = self.alpha_ratios_data[:, 0] / self.alpha_ratios_data[:, 1]
 
+    #  TODO
     def update_avg_products_sold(self, configuration, results: RoundData):
         for prod in range(self.n_products):
             self.avg_products_sold_data[prod, configuration[prod], 0] += results.sales[prod]
@@ -105,6 +118,7 @@ class Learner:
                 self.avg_products_sold_data[prod, configuration[prod], 0] / \
                 self.avg_products_sold_data[prod, configuration[prod], 1]
 
+    #  TODO
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)
         idxs = np.arange(self.n_products)

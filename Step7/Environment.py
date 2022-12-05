@@ -1,9 +1,14 @@
+from collections import namedtuple
+from typing import List
+
 import numpy as np
+
+from RoundsHistory import RoundsHistory
 
 
 class RoundData:
     def __init__(self, n_products, n_user_types):
-        self.configuration = np.zeros((n_user_types, n_products), dtype=int)
+        self.ctx_configs = []
         self.users = np.zeros(n_user_types)
         self.first_clicks = np.zeros((n_user_types, n_products), dtype=int)
         self.visits = np.zeros((n_user_types, n_products), dtype=int)
@@ -11,6 +16,9 @@ class RoundData:
         self.rewards = np.zeros(n_user_types)
         self.sales = np.zeros((n_user_types, n_products), dtype=int)
         self.prod_rewards = np.zeros((n_user_types, n_products))
+
+
+ContextConfig = namedtuple('ContextConfig', ['configuration', 'agg_classes'])
 
 
 class Environment:
@@ -148,14 +156,20 @@ class Environment:
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         return alpha_ratios
 
-    def round(self, pulled_arms, seed=0):
+    def get_pulled_arms_by_user_type(self, user_type, ctx_configs):
+        for ctx_config in ctx_configs:
+            if user_type in ctx_config.agg_classes:
+                return ctx_config.configuration
+        raise AssertionError('User class not found in the contexts')
+
+    def round(self, ctx_configs: List[ContextConfig], seed=0):
         s = seed
         if seed == 0:
             s = np.random.randint(1, 2**30)
         np.random.seed(s)
 
         result = RoundData(self.n_products, self.n_user_types)
-        result.configuration = pulled_arms
+        result.ctx_configs = ctx_configs
 
         daily_users = np.random.randint(500, 1000)
         result.users = daily_users
@@ -171,7 +185,7 @@ class Environment:
             visited = []
             to_visit = [product]
             result.first_clicks[user_type, product] += 1
-
+            pulled_arms = self.get_pulled_arms_by_user_type(user_type, ctx_configs)
             while to_visit:
                 current_product = to_visit.pop(0)
                 visited.append(current_product)
@@ -203,5 +217,7 @@ class Environment:
 
         result.prod_rewards = rewards / daily_users
         result.rewards = np.sum(result.prod_rewards, axis=1)
+
+        RoundsHistory.append(result)
 
         return result

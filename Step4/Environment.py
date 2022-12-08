@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 
@@ -15,13 +17,16 @@ class RoundData:
 
 class Environment:
     def __init__(self):
-        self.n_products = 5
-        self.n_arms = 4
-        self.n_user_types = 3
+        filepath = '../json/environment.json'
+        with open(filepath, 'r', encoding='utf_8') as stream:
+            env_features = json.load(stream)
+
+        self.n_products = env_features['num_products']
+        self.n_arms = env_features['num_arms']
+        self.n_user_types = env_features['num_user_types']
 
         # REWARDS VARIABLES
-
-        self.feature_probabilities = np.array([0.45, 0.65])
+        self.feature_probabilities = np.array(env_features['feature_probabilities'])
         """
         User types:
             0 -> FALSE *
@@ -32,86 +37,15 @@ class Environment:
             (1 - self.feature_probabilities[0]),
             (self.feature_probabilities[0]) * (1 - self.feature_probabilities[1]),
             (self.feature_probabilities[0]) * (self.feature_probabilities[1])])
-
-        self.prices = np.array([
-            [80, 140, 150, 170],
-            [50, 55, 65, 70],
-            [160, 220, 230, 240],
-            [100, 150, 250, 270],
-            [50, 60, 70, 120]
-        ])
-        self.conversion_rates = np.array([
-            [[0.77, 0.77, 0.23, 0.20],
-             [0.80, 0.40, 0.35, 0.00],
-             [0.62, 0.59, 0.00, 0.00],
-             [0.67, 0.62, 0.60, 0.00],
-             [0.90, 0.85, 0.83, 0.80]],
-
-            [[0.81, 0.75, 0.60, 0.45],
-             [0.70, 0.49, 0.32, 0.00],
-             [0.58, 0.55, 0.00, 0.00],
-             [0.77, 0.70, 0.68, 0.32],
-             [0.80, 0.77, 0.75, 0.70]],
-
-            [[0.60, 0.57, 0.00, 0.00],
-             [0.71, 0.20, 0.15, 0.10],
-             [0.81, 0.76, 0.32, 0.20],
-             [0.62, 0.59, 0.54, 0.00],
-             [0.72, 0.68, 0.66, 0.65]]
-        ])
-        self.max_products_sold = np.array([
-            [[50, 40, 25, 10],
-             [60, 20, 15, 10],
-             [75, 70, 35, 30],
-             [55, 50, 48, 10],
-             [60, 58, 55, 50]],
-
-            [[50, 40, 25, 10],
-             [60, 20, 15, 10],
-             [75, 70, 35, 30],
-             [55, 50, 48, 10],
-             [60, 58, 55, 50]],
-
-            [[50, 40, 25, 10],
-             [60, 20, 15, 10],
-             [75, 70, 35, 30],
-             [55, 50, 48, 10],
-             [60, 58, 55, 50]]
-        ])
+        self.prices = np.array(env_features['prices'])
+        self.conversion_rates = np.array(env_features['conversion_rates'])
+        self.max_products_sold = np.array(env_features['max_products_sold'])
 
         # GRAPH VARIABLES
-        self.lambda_p = 0.8
-        self.alpha_ratios_parameters = np.array([
-            [[3, 7], [10, 2], [5, 6], [3, 3], [25, 13], [13, 2]],
-            [[13, 15], [12, 20], [8, 6], [9, 3], [10, 12], [10, 3]],
-            [[10, 7], [3, 12], [14, 17], [15, 8], [11, 6], [8, 3]]
-        ])
-        self.graph_probabilities = np.array([
-            [[0, 0.40, 0.35, 0.40, 0.10],
-             [0.30, 0, 0.25, 0.10, 0.15],
-             [0.35, 0.15, 0, 0.20, 0.30],
-             [0.10, 0.05, 0.20, 0, 0.15],
-             [0.10, 0.30, 0.25, 0.10, 0]],
-
-            [[0, 0.20, 0.50, 0.15, 0.45],
-             [0.25, 0, 0.30, 0.40, 0.10],
-             [0.45, 0.15, 0, 0.65, 0.15],
-             [0.55, 0.50, 0.35, 0, 0.65],
-             [0.15, 0.60, 0.35, 0.40, 0]],
-
-            [[0, 0.25, 0.20, 0.45, 0.15],
-             [0.35, 0, 0.10, 0.55, 0.50],
-             [0.60, 0.45, 0, 0.50, 0.10],
-             [0.15, 0.15, 0.35, 0, 0.10],
-             [0.15, 0.25, 0.10, 0.55, 0]]
-        ])
-        self.secondaries = np.array([
-            [1, 4],
-            [2, 0],
-            [0, 3],
-            [4, 1],
-            [3, 2]
-        ])
+        self.lambda_p = env_features['lambda']
+        self.alpha_ratios_parameters = np.array(env_features['alpha_ratios_parameters'])
+        self.graph_probabilities = np.array(env_features['graph_probabilities'])
+        self.secondaries = np.array(env_features['secondaries'])
 
     def draw_user_type(self):
         """
@@ -151,7 +85,7 @@ class Environment:
     def round(self, pulled_arms, seed=0):
         s = seed
         if seed == 0:
-            s = np.random.randint(1, 2**30)
+            s = np.random.randint(1, 2 ** 30)
         np.random.seed(s)
 
         result = RoundData(self.n_products)

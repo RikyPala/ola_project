@@ -15,7 +15,7 @@ class ContextNode:
         splittable_features = []
         if self.feature_1 is not None:
             splittable_features.append(1)
-        if self.feature_2 is not None:
+        if self.feature_2 is not None and (self.feature_1 is None or self.feature_1):
             splittable_features.append(2)
         return splittable_features
 

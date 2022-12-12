@@ -9,15 +9,15 @@ from RoundsHistory import RoundsHistory
 
 
 class RoundData:
-    def __init__(self, n_products, n_user_types):
+    def __init__(self, n_products, n_features):
         self.ctx_configs = []
-        self.users = np.zeros(n_user_types)
-        self.first_clicks = np.zeros((n_user_types, n_products), dtype=int)
-        self.visits = np.zeros((n_user_types, n_products), dtype=int)
-        self.conversions = np.zeros((n_user_types, n_products), dtype=int)
-        self.rewards = np.zeros(n_user_types)
-        self.sales = np.zeros((n_user_types, n_products), dtype=int)
-        self.prod_rewards = np.zeros((n_user_types, n_products))
+        self.users = np.zeros(2**n_features)
+        self.first_clicks = np.zeros((2**n_features, n_products), dtype=int)
+        self.visits = np.zeros((2**n_features, n_products), dtype=int)
+        self.conversions = np.zeros((2**n_features, n_products), dtype=int)
+        self.rewards = np.zeros(2**n_features)
+        self.sales = np.zeros((2**n_features, n_products), dtype=int)
+        self.prod_rewards = np.zeros((2**n_features, n_products))
 
 
 ContextConfig = namedtuple('ContextConfig', ['configuration', 'agg_classes'])
@@ -35,12 +35,7 @@ class Environment:
 
         # REWARDS VARIABLES
         self.feature_probabilities = np.array(env_features['feature_probabilities'])
-        """
-        User types:
-            0 -> FALSE *
-            1 -> TRUE FALSE
-            2 -> TRUE TRUE
-        """
+        self.n_features = len(self.feature_probabilities)
         self.user_probabilities = np.array([
             (1 - self.feature_probabilities[0]),
             (self.feature_probabilities[0]) * (1 - self.feature_probabilities[1]),
@@ -74,11 +69,18 @@ class Environment:
         feature_2 = np.random.binomial(1, self.feature_probabilities[1])
         if not feature_1:
             user_type = 0
-        elif not feature_2:
-            user_type = 1
+            if not feature_2:
+                class_type = 0
+            else:
+                class_type = 1
         else:
-            user_type = 2
-        return user_type
+            if not feature_2:
+                user_type = 1
+                class_type = 2
+            else:
+                user_type = 2
+                class_type = 3
+        return user_type, class_type
 
     def draw_starting_page(self, user_type, alpha_ratios):
         product = np.random.choice(6, p=alpha_ratios[user_type])
@@ -102,28 +104,27 @@ class Environment:
             s = np.random.randint(1, 2**30)
         np.random.seed(s)
 
-        result = RoundData(self.n_products, self.n_user_types)
+        result = RoundData(self.n_products, self.n_features)
         result.ctx_configs = ctx_configs
 
         daily_users = np.random.randint(500, 1000)
-        result.users = daily_users
         alpha_ratios = self.draw_alpha_ratios()
         rewards = np.zeros((self.n_user_types, self.n_products), dtype=int)
 
         for _ in range(daily_users):
-            user_type = self.draw_user_type()
-            result.users[user_type] += 1
+            user_type, class_type = self.draw_user_type()
+            result.users[class_type] += 1
             product = self.draw_starting_page(user_type=user_type, alpha_ratios=alpha_ratios)
             if product == 5:  # competitors' page
                 continue
             visited = []
             to_visit = [product]
-            result.first_clicks[user_type, product] += 1
+            result.first_clicks[class_type, product] += 1
             pulled_arms = self.get_pulled_arms_by_user_type(user_type, ctx_configs)
             while to_visit:
                 current_product = to_visit.pop(0)
                 visited.append(current_product)
-                result.visits[user_type, current_product] += 1
+                result.visits[class_type, current_product] += 1
 
                 product_price = self.prices[current_product, pulled_arms[current_product]]
 
@@ -132,10 +133,10 @@ class Environment:
                 if not buy:
                     continue
 
-                result.conversions[user_type, current_product] += 1
+                result.conversions[class_type, current_product] += 1
                 products_sold = np.random.randint(
                     1, self.max_products_sold[user_type, current_product, pulled_arms[current_product]] + 1)
-                result.sales[user_type, current_product] += products_sold
+                result.sales[class_type, current_product] += products_sold
                 rewards[user_type, current_product] += product_price * products_sold
 
                 secondary_1 = self.secondaries[current_product, 0]

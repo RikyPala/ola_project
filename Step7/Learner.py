@@ -1,4 +1,6 @@
 from abc import abstractmethod
+from typing import List
+
 import numpy as np
 
 from Environment import Environment, RoundData
@@ -7,6 +9,11 @@ from RoundsHistory import RoundsHistory
 
 class Learner:
 
+    TYPE0_0 = 0
+    TYPE0_1 = 1
+    TYPE1 = 2
+    TYPE2 = 3
+
     def __init__(self, env: Environment, feature_1=None, feature_2=None):
 
         self.n_products = env.n_products
@@ -14,18 +21,16 @@ class Learner:
         self.prices = env.prices
         self.lambda_p = env.lambda_p
 
-        self.agg_classes = []
-        if feature_1 is None or not feature_1:
-            self.agg_classes.append(0)
-        if feature_2 is None or not feature_2:
-            self.agg_classes.append(1)
-        if feature_2 is None or feature_2:
-            self.agg_classes.append(2)
+        self.agg_classes = self.assign_agg_classes(feature_1, feature_2)
+
+        fp_1 = env.feature_probabilities[0]
+        fp_2 = env.feature_probabilities[1]
+        self.classes_probabilities = np.array([(1-fp_1)*(1-fp_2), (1-fp_1)*fp_2, fp_1*(1-fp_2), fp_1*fp_2])
 
         self.graph_probabilities = np.sum(
-            env.graph_probabilities[self.agg_classes] * np.expand_dims(env.user_probabilities[self.agg_classes],
+            env.graph_probabilities[self.agg_classes] * np.expand_dims(self.classes_probabilities[self.agg_classes],
                                                                        axis=(1, 2)),
-            axis=0) / np.sum(env.user_probabilities[self.agg_classes])
+            axis=0) / np.sum(self.classes_probabilities[self.agg_classes])
 
         self.alpha_ratios_data = np.full((self.n_products + 1, 2), 0)
         self.alpha_ratios_est = np.full(self.n_products + 1, 1. / (self.n_products + 1))
@@ -49,6 +54,33 @@ class Learner:
         configuration = np.argmax(exp_rewards, axis=1)
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1
         return configuration
+
+    def assign_agg_classes(self, feature_1, feature_2):
+        agg_classes = []
+        if feature_1 is None:
+            if feature_2 is None:
+                agg_classes = [self.TYPE0_0, self.TYPE0_1, self.TYPE1, self.TYPE2]
+            elif not feature_2:
+                agg_classes = [self.TYPE0_0, self.TYPE1]
+            elif feature_2:
+                agg_classes = [self.TYPE0_1, self.TYPE2]
+        elif not feature_1:
+            if feature_2 is None:
+                agg_classes = [self.TYPE0_0, self.TYPE0_1]
+            elif not feature_2:
+                agg_classes = [self.TYPE0_0]
+            elif feature_2:
+                agg_classes = [self.TYPE0_1]
+        elif feature_1:
+            if feature_2 is None:
+                agg_classes = [self.TYPE1, self.TYPE2]
+            elif not feature_2:
+                agg_classes = [self.TYPE1]
+            elif feature_2:
+                agg_classes = [self.TYPE2]
+        if not agg_classes:
+            raise NotImplementedError('Feature passed in the constructor are of the wrong type')
+        return agg_classes
 
     @abstractmethod
     def update(self, round_data):
@@ -102,23 +134,23 @@ class Learner:
 
         return visited
 
-    #  TODO
     def update_alpha_ratios(self, results: RoundData):
-        self.alpha_ratios_data[:self.n_products, 0] += results.first_clicks
-        self.alpha_ratios_data[self.n_products, 0] += results.users - np.sum(results.first_clicks)
-        self.alpha_ratios_data[:, 1] += results.users
+        self.alpha_ratios_data[:self.n_products, 0] += np.sum(results.first_clicks[self.agg_classes], axis=0)
+        self.alpha_ratios_data[self.n_products, 0] += \
+            np.sum(results.users[self.agg_classes]) - np.sum(results.first_clicks[self.agg_classes])
+        self.alpha_ratios_data[:, 1] += np.sum(results.users[self.agg_classes], axis=0)
         self.alpha_ratios_est = self.alpha_ratios_data[:, 0] / self.alpha_ratios_data[:, 1]
 
-    #  TODO
     def update_avg_products_sold(self, configuration, results: RoundData):
         for prod in range(self.n_products):
-            self.avg_products_sold_data[prod, configuration[prod], 0] += results.sales[prod]
-            self.avg_products_sold_data[prod, configuration[prod], 1] += results.conversions[prod]
+            self.avg_products_sold_data[prod, configuration[prod], 0] += \
+                np.sum(results.sales[self.agg_classes, prod], axis=0)
+            self.avg_products_sold_data[prod, configuration[prod], 1] += \
+                np.sum(results.conversions[self.agg_classes, prod], axis=0)
             self.avg_products_sold_est[prod, configuration[prod]] = \
                 self.avg_products_sold_data[prod, configuration[prod], 0] / \
                 self.avg_products_sold_data[prod, configuration[prod], 1]
 
-    #  TODO
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)
         idxs = np.arange(self.n_products)

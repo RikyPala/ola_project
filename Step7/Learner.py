@@ -1,14 +1,13 @@
 from abc import abstractmethod
-from typing import List
 
 import numpy as np
 
-from Environment import Environment, RoundData
+from Environment import Environment
+from RoundData import RoundData
 from RoundsHistory import RoundsHistory
 
 
 class Learner:
-
     TYPE0_0 = 0
     TYPE0_1 = 1
     TYPE1 = 2
@@ -25,11 +24,12 @@ class Learner:
 
         fp_1 = env.feature_probabilities[0]
         fp_2 = env.feature_probabilities[1]
-        self.classes_probabilities = np.array([(1-fp_1)*(1-fp_2), (1-fp_1)*fp_2, fp_1*(1-fp_2), fp_1*fp_2])
+        self.classes_probabilities = np.array(
+            [(1 - fp_1) * (1 - fp_2), (1 - fp_1) * fp_2, fp_1 * (1 - fp_2), fp_1 * fp_2])
 
+        gp = np.array([env.graph_probabilities[0], env.graph_probabilities[0], *env.graph_probabilities[1:]])
         self.graph_probabilities = np.sum(
-            env.graph_probabilities[self.agg_classes] * np.expand_dims(self.classes_probabilities[self.agg_classes],
-                                                                       axis=(1, 2)),
+            gp[self.agg_classes] * np.expand_dims(self.classes_probabilities[self.agg_classes], axis=(1, 2)),
             axis=0) / np.sum(self.classes_probabilities[self.agg_classes])
 
         self.alpha_ratios_data = np.full((self.n_products + 1, 2), 0)
@@ -50,9 +50,10 @@ class Learner:
         exp_conversion_rates = self.sample()
         alpha_ratios = np.array([self.alpha_ratios_est[:self.n_products]] * self.n_arms).transpose()
         exp_rewards = alpha_ratios * \
-            (exp_conversion_rates * self.prices * self.avg_products_sold_est + self.marginal_rewards)
+                      (exp_conversion_rates * self.prices * self.avg_products_sold_est + self.marginal_rewards)
         configuration = np.argmax(exp_rewards, axis=1)
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1
+        print(self.pulled_rounds)
         return configuration
 
     def assign_agg_classes(self, feature_1, feature_2):
@@ -116,7 +117,6 @@ class Learner:
         while to_visit:
             current_product = to_visit.pop(0)
             visited[current_product] += 1
-
             buy = np.random.binomial(1, self.get_means()[current_product, configuration[current_product]])
             if not buy:
                 continue
@@ -138,7 +138,7 @@ class Learner:
         self.alpha_ratios_data[:self.n_products, 0] += np.sum(results.first_clicks[self.agg_classes], axis=0)
         self.alpha_ratios_data[self.n_products, 0] += \
             np.sum(results.users[self.agg_classes]) - np.sum(results.first_clicks[self.agg_classes])
-        self.alpha_ratios_data[:, 1] += np.sum(results.users[self.agg_classes], axis=0)
+        self.alpha_ratios_data[:, 1] += np.sum(results.users[self.agg_classes], axis=0, dtype=np.int32)
         self.alpha_ratios_est = self.alpha_ratios_data[:, 0] / self.alpha_ratios_data[:, 1]
 
     def update_avg_products_sold(self, configuration, results: RoundData):

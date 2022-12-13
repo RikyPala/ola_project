@@ -45,9 +45,6 @@ class CUMSUM_UCB(Learner):
                 self.change_detection[prod][pulled_arm[prod]].reset()
 
             self.valid_rewards_per_arms[prod][pulled_arm[prod]].append(data.conversions[prod]/data.visits[prod])
-            """print('ciao')
-            print(self.valid_rewards_per_arms[prod][pulled_arm[prod]])
-            print('ciao')"""
             self.empirical_means[prod, pulled_arm[prod]] = np.mean(self.valid_rewards_per_arms[prod][pulled_arm[prod]])
             total_valid_samples = np.sum(self.pulled_rounds[prod])
             for a in range(self.n_arms):

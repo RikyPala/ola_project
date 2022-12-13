@@ -1,12 +1,13 @@
 import numpy as np
 from Learner import Learner
-from Environment import Environment, RoundData
+from Environment import Environment
+from RoundData import RoundData
 
 
 class UCB(Learner):
 
-    def __init__(self, env: Environment):
-        super().__init__(env)
+    def __init__(self, env: Environment, feature_1=None, feature_2=None):
+        super().__init__(env, feature_1, feature_2)
         self.t = 0
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
@@ -20,7 +21,6 @@ class UCB(Learner):
         conversion_rates = conversions / visits
         idxs = np.arange(self.n_products)
         n_pulls = self.pulled_rounds[idxs, configuration]
-
         self.empirical_means[idxs, configuration] = \
             (self.empirical_means[idxs, configuration] * (n_pulls - 1) + conversion_rates) / n_pulls
         for prod in range(self.n_products):

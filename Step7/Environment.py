@@ -5,19 +5,8 @@ from typing import List
 
 import numpy as np
 
+from RoundData import RoundData
 from RoundsHistory import RoundsHistory
-
-
-class RoundData:
-    def __init__(self, n_products, n_features):
-        self.ctx_configs = []
-        self.users = np.zeros(2**n_features)
-        self.first_clicks = np.zeros((2**n_features, n_products), dtype=int)
-        self.visits = np.zeros((2**n_features, n_products), dtype=int)
-        self.conversions = np.zeros((2**n_features, n_products), dtype=int)
-        self.rewards = np.zeros(2**n_features)
-        self.sales = np.zeros((2**n_features, n_products), dtype=int)
-        self.prod_rewards = np.zeros((2**n_features, n_products))
 
 
 ContextConfig = namedtuple('ContextConfig', ['configuration', 'agg_classes'])
@@ -98,7 +87,7 @@ class Environment:
                 return ctx_config.configuration
         raise AssertionError('User class not found in the contexts')
 
-    def round(self, ctx_configs: List[ContextConfig], seed=0):
+    def round(self, ctx_configs: List[ContextConfig], learner_class=None, seed=0):
         s = seed
         if seed == 0:
             s = np.random.randint(1, 2**30)
@@ -153,6 +142,7 @@ class Environment:
         result.prod_rewards = rewards / daily_users
         result.rewards = np.sum(result.prod_rewards, axis=1)
 
-        RoundsHistory.append(result)
+        if learner_class is not None:
+            RoundsHistory.append(result, learner_class)
 
         return result

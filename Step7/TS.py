@@ -1,13 +1,14 @@
 ﻿import numpy as np
 
 from Learner import Learner
-from Environment import Environment, RoundData
+from Environment import Environment
+from RoundData import RoundData
 
 
 class TS(Learner):
 
-    def __init__(self, env: Environment):
-        super().__init__(env)
+    def __init__(self, env: Environment, feature_1=None, feature_2=None):
+        super().__init__(env, feature_1, feature_2)
         self.beta_parameters = np.ones((self.n_products, self.n_arms, 2))
 
     def update(self, round_data: RoundData):

@@ -9,12 +9,14 @@ from Solver import Solver
 T = 200
 env = NonStationaryEnvironment(T)
 solver = Solver(env)
-optimal_configuration, optimal_reward = solver.find_optimal()
+optimal_configurations, optimal_rewards = solver.find_optimal()
 
-print("OPTIMAL CONFIGURATION")
-print(optimal_configuration)
-print("OPTIMAL A-PRIORI REWARD")
-print(optimal_reward)
+for i in range(env.n_phases):
+
+    print("OPTIMAL CONFIGURATION Phase "+str(i))
+    print(optimal_configurations[i])
+    print("OPTIMAL A-PRIORI REWARD "+str(i))
+    print(optimal_rewards[i])
 
 
 ucb_cum_sum = CUMSUM_UCB(env)
@@ -37,7 +39,8 @@ for i in range(T):
     ucb_sw.update(ucb_sw_round_data)
     ucb_sw_rounds.append(ucb_sw_round_data)
 
-    optimal_round_data = env.round(optimal_configuration, seed, new_round=True)
+    current_phase = int(env.t / env.phases_size)
+    optimal_round_data = env.round(optimal_configurations[current_phase], seed, new_round=True)
     optimal_rounds.append(optimal_round_data)
 
     print("\nROUND: " + str(i + 1))

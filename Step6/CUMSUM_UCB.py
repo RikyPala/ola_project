@@ -7,7 +7,7 @@ from NonStationaryEnvironment import NonStationaryEnvironment, RoundData
 
 class CUMSUM_UCB(Learner):
 
-    def __init__(self, env: NonStationaryEnvironment, M=15, eps=0.05, h=0.15, alpha=0.1):
+    def __init__(self, env: NonStationaryEnvironment, M=15, eps=0.05, h=0.15, alpha=0.01):
         super().__init__(env)
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))

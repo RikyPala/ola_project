@@ -81,9 +81,9 @@ class Environment:
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         return alpha_ratios
 
-    def get_pulled_arms_by_user_type(self, user_type, ctx_configs):
+    def get_pulled_arms_by_class_type(self, class_type, ctx_configs):
         for ctx_config in ctx_configs:
-            if user_type in ctx_config.agg_classes:
+            if class_type in ctx_config.agg_classes:
                 return ctx_config.configuration
         raise AssertionError('User class not found in the contexts')
 
@@ -109,7 +109,7 @@ class Environment:
             visited = []
             to_visit = [product]
             result.first_clicks[class_type, product] += 1
-            pulled_arms = self.get_pulled_arms_by_user_type(user_type, ctx_configs)
+            pulled_arms = self.get_pulled_arms_by_class_type(class_type, ctx_configs)
             while to_visit:
                 current_product = to_visit.pop(0)
                 visited.append(current_product)

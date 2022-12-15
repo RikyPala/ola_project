@@ -13,9 +13,9 @@ optimal_configurations, optimal_rewards = solver.find_optimal()
 
 """
 Should be:
-UserType 0:   1, 0, 2, 3, 1
-UserType 1:   1, 2, 3, 0, 0
-UserType 2:   3, 0, 1, 1, 2
+UserType 0:   1, 0, 2, 3, 1  -> FF (class: 0) + FV (class: 1)
+UserType 1:   1, 2, 3, 0, 0  -> VF (class: 2)
+UserType 2:   3, 0, 1, 1, 2  -> VV (class: 3)
 """
 
 print("OPTIMAL CONFIGURATION")
@@ -24,7 +24,7 @@ print("OPTIMAL A-PRIORI REWARD")
 print(optimal_rewards)
 
 T = 100
-split_step = 7
+split_step = 14
 
 ucb_rounds = []
 ts_rounds = []

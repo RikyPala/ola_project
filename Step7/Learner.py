@@ -4,7 +4,6 @@ import numpy as np
 
 from Environment import Environment
 from RoundData import RoundData
-from RoundsHistory import RoundsHistory
 
 
 class Learner:
@@ -43,17 +42,12 @@ class Learner:
         self.secondaries = env.secondaries
         self.pulled_rounds = np.zeros((self.n_products, self.n_arms))
 
-        for round_data in RoundsHistory.history:
-            self.update(round_data)
-
     def pull(self):
         exp_conversion_rates = self.sample()
         alpha_ratios = np.array([self.alpha_ratios_est[:self.n_products]] * self.n_arms).transpose()
-        exp_rewards = alpha_ratios * \
-                      (exp_conversion_rates * self.prices * self.avg_products_sold_est + self.marginal_rewards)
+        exp_rewards = (exp_conversion_rates * self.prices * self.avg_products_sold_est
+                       + self.marginal_rewards) * alpha_ratios
         configuration = np.argmax(exp_rewards, axis=1)
-        self.pulled_rounds[np.arange(self.n_products), configuration] += 1
-        print(self.pulled_rounds)
         return configuration
 
     def assign_agg_classes(self, feature_1, feature_2):
@@ -147,9 +141,12 @@ class Learner:
                 np.sum(results.sales[self.agg_classes, prod], axis=0)
             self.avg_products_sold_data[prod, configuration[prod], 1] += \
                 np.sum(results.conversions[self.agg_classes, prod], axis=0)
-            self.avg_products_sold_est[prod, configuration[prod]] = \
-                self.avg_products_sold_data[prod, configuration[prod], 0] / \
-                self.avg_products_sold_data[prod, configuration[prod], 1]
+            a = self.avg_products_sold_data[prod, configuration[prod], 0]
+            b = self.avg_products_sold_data[prod, configuration[prod], 1]
+            if b == 0:
+                self.avg_products_sold_est[prod, configuration[prod]] = np.inf
+            else:
+                self.avg_products_sold_est[prod, configuration[prod]] = a / b
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)

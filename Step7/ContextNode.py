@@ -7,7 +7,7 @@ from RoundsHistory import RoundsHistory
 
 class ContextNode:
 
-    def __init__(self, env: Environment, learner_class, feature_1=None, feature_2=None, delta=0.1):
+    def __init__(self, env: Environment, learner_class, feature_1=None, feature_2=None, delta=0.5):
         self.delta = delta
         self.left = None
         self.right = None
@@ -33,19 +33,19 @@ class ContextNode:
         fp = self.feature_probabilities
         for feature in splittable_features:
             if feature == 1:
-                left = ContextNode(self.env, type(self.learner),
-                                   feature_1=False, feature_2=self.feature_2, delta=self.delta)
-                right = ContextNode(self.env, type(self.learner),
-                                    feature_1=True, feature_2=self.feature_2, delta=self.delta)
+                left = ContextNode(self.env, type(self.learner), feature_1=False, feature_2=self.feature_2,
+                                   delta=self.delta)
+                right = ContextNode(self.env, type(self.learner), feature_1=True, feature_2=self.feature_2,
+                                    delta=self.delta)
             elif feature == 2:
-                left = ContextNode(self.env, type(self.learner),
-                                   feature_1=self.feature_1, feature_2=False, delta=self.delta)
-                right = ContextNode(self.env, type(self.learner),
-                                    feature_1=self.feature_1, feature_2=True, delta=self.delta)
+                left = ContextNode(self.env, type(self.learner), feature_1=self.feature_1, feature_2=False,
+                                   delta=self.delta)
+                right = ContextNode(self.env, type(self.learner), feature_1=self.feature_1, feature_2=True,
+                                    delta=self.delta)
             else:
-                raise NotImplementedError('Wrong feature passed for the splitting.')
+                raise NotImplementedError('Non-existing feature passed for the splitting.')
             left_x_ = np.sum(np.mean(left.learner.get_means(), axis=1))
-            left_lower_bound = left_x_ - (- np.log(self.delta) / (2 * t))**0.5
+            left_lower_bound = left_x_ - (- np.log(self.delta) / (2 * t)) ** 0.5
             right_x_ = np.sum(np.mean(right.learner.get_means(), axis=1))
             right_lower_bound = right_x_ - (- np.log(self.delta) / (2 * t)) ** 0.5
             children_lower_bound = (1-fp[feature-1]) * left_lower_bound + fp[feature-1] * right_lower_bound

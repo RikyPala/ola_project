@@ -2,6 +2,7 @@ import numpy as np
 from Learner import Learner
 from Environment import Environment
 from RoundData import RoundData
+from RoundsHistory import RoundsHistory
 
 
 class UCB(Learner):
@@ -12,13 +13,17 @@ class UCB(Learner):
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
         self.c = 0.5
+        for round_data in RoundsHistory.history[RoundsHistory.UCB_index]:
+            self.update(round_data)
 
     def update(self, round_data: RoundData):
         self.t += 1
         configuration = self.get_configuration_by_agg_classes(round_data.ctx_configs)
         conversions = np.sum(round_data.conversions[self.agg_classes], axis=0)
         visits = np.sum(round_data.visits[self.agg_classes], axis=0)
+        self.pulled_rounds[np.arange(self.n_products), configuration] += visits != 0
         conversion_rates = conversions / visits
+        conversion_rates[visits == 0] = 0
         idxs = np.arange(self.n_products)
         n_pulls = self.pulled_rounds[idxs, configuration]
         self.empirical_means[idxs, configuration] = \

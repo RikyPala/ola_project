@@ -10,7 +10,7 @@ class UCB(Learner):
         self.t = 0
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
-        self.c = 0.5
+        self.c = 0.2
 
     def update(self, results: RoundData):
         self.t += 1

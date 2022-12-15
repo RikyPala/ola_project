@@ -5,12 +5,12 @@ from NonStationaryEnvironment import NonStationaryEnvironment, RoundData
 
 class SW_UCB(Learner):
 
-    def __init__(self, env: NonStationaryEnvironment, window_size=10):
+    def __init__(self, env: NonStationaryEnvironment, window_size=30):
         super().__init__(env)
         self.t = 0
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
-        self.c = 1
+        self.c = 0.2
         self.window_size = window_size
         self.pulled_arms_timeline = []
         self.pulled_rounds = np.zeros((self.n_products, self.n_arms))

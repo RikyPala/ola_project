@@ -6,11 +6,10 @@ from CUMSUM_UCB import CUMSUM_UCB
 from SW_UCB import SW_UCB
 from Solver import Solver
 
-T = 280
+T = 200
 env = NonStationaryEnvironment(T)
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()
-print(solver.conversion_rates)
 
 print("OPTIMAL CONFIGURATION")
 print(optimal_configuration)

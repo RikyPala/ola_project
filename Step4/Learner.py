@@ -92,9 +92,12 @@ class Learner:
         for prod in range(self.n_products):
             self.avg_products_sold_data[prod, configuration[prod], 0] += results.sales[prod]
             self.avg_products_sold_data[prod, configuration[prod], 1] += results.conversions[prod]
-            self.avg_products_sold_est[prod, configuration[prod]] = \
-                self.avg_products_sold_data[prod, configuration[prod], 0] / \
-                self.avg_products_sold_data[prod, configuration[prod], 1]
+            a = self.avg_products_sold_data[prod, configuration[prod], 0]
+            b = self.avg_products_sold_data[prod, configuration[prod], 1]
+            if b == 0:
+                self.avg_products_sold_est[prod, configuration[prod]] = np.inf
+            else:
+                self.avg_products_sold_est[prod, configuration[prod]] = a / b
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)

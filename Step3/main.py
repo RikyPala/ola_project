@@ -9,7 +9,6 @@ from Solver import Solver
 env = Environment()
 solver = Solver(env)
 optimal_configuration, optimal_reward = solver.find_optimal()
-print(solver.conversion_rates)
 
 print("OPTIMAL CONFIGURATION")
 print(optimal_configuration)

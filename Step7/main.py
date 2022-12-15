@@ -11,25 +11,28 @@ env = Environment()
 solver = Solver(env)
 optimal_configurations, optimal_rewards = solver.find_optimal()
 
+"""
+Should be:
+UserType 0:   1, 0, 2, 3, 1
+UserType 1:   1, 2, 3, 0, 0
+UserType 2:   3, 0, 1, 1, 2
+"""
+
 print("OPTIMAL CONFIGURATION")
 print(optimal_configurations)
 print("OPTIMAL A-PRIORI REWARD")
 print(optimal_rewards)
 
 T = 100
-split_step = 14
+split_step = 7
 
-ucb_learner = UCB(env)
 ucb_rounds = []
-
-ts_learner = TS(env)
 ts_rounds = []
-
 optimal_rounds = []
 learners = []
 
-ucb_root = ContextNode(env, UCB, feature_1=None, feature_2=None, delta=0.1)
-ts_root = ContextNode(env, TS, feature_1=None, feature_2=None, delta=0.1)
+ucb_root = ContextNode(env, UCB, feature_1=None, feature_2=None)
+ts_root = ContextNode(env, TS, feature_1=None, feature_2=None)
 
 ucb_splits = []
 ts_splits = []
@@ -42,100 +45,138 @@ for i in range(T):
     seed = np.random.randint(1, 2 ** 30)
 
     ucb_leaves = ucb_root.get_leaves()
-    if i % split_step:
+    if i > 0 and i % split_step == 0:
         for leaf in ucb_leaves:
             if leaf.split():
                 ucb_splits.append(i)
         ucb_leaves = ucb_root.get_leaves()
     ucb_learners = [leaf.learner for leaf in ucb_leaves]
     ucb_ctx_configs = [ContextConfig(ucb.pull(), ucb.agg_classes) for ucb in ucb_learners]
-    ucb_round_data = env.round(ucb_ctx_configs, seed)
-    ucb_learner.update(ucb_round_data)
+    ucb_round_data = env.round(ucb_ctx_configs, learner_class=UCB, seed=seed)
     ucb_rounds.append(ucb_round_data)
+    for ucb_learner in ucb_learners:
+        ucb_learner.update(ucb_round_data)
 
     ts_leaves = ts_root.get_leaves()
-    if i % split_step:
+    if i > 0 and i % split_step == 0:
         for leaf in ts_leaves:
             if leaf.split():
                 ts_splits.append(i)
         ts_leaves = ts_root.get_leaves()
     ts_learners = [leaf.learner for leaf in ts_leaves]
     ts_ctx_configs = [ContextConfig(ts.pull(), ts.agg_classes) for ts in ts_learners]
-    ts_round_data = env.round(ts_ctx_configs, seed)
-    ts_learner.update(ts_round_data)
+    ts_round_data = env.round(ts_ctx_configs, learner_class=TS, seed=seed)
     ts_rounds.append(ts_round_data)
+    for ts_learner in ts_learners:
+        ts_learner.update(ts_round_data)
 
-    optimal_round_data = env.round(optimal_configurations, seed)
+    optimal_round_data = env.round(optimal_ctx_configs, seed=seed)
     optimal_rounds.append(optimal_round_data)
 
     print("\nROUND: " + str(i + 1))
     print("--------------------UCB---------------------")
-    print("PLAYED: " + str(ucb_ctx_configs))
-    print("REWARDS: " + str(ucb_round_data.rewards))
+    print("PLAYED:")
+    for ctx_config in ucb_ctx_configs:
+        print(f"Aggregated classes: {ctx_config.agg_classes}\tConfiguration: {ctx_config.configuration}")
+    print("REWARDS:")
+    for user_type in range(env.n_user_types):
+        print(f"UserType {user_type}: {ucb_round_data.rewards[user_type]}")
     print("--------------------TS----------------------")
-    print("PLAYED: " + str(ts_ctx_configs))
-    print("REWARDS: " + str(ts_round_data.rewards))
+    print("PLAYED:")
+    for ctx_config in ts_ctx_configs:
+        print(f"Aggregated classes: {ctx_config.agg_classes}\tConfiguration: {ctx_config.configuration}")
+    print("REWARDS:")
+    for user_type in range(env.n_user_types):
+        print(f"UserType {user_type}: {ts_round_data.rewards[user_type]}")
     print("------------------OPTIMAL-------------------")
-    print("REWARD: " + str(optimal_round_data.rewards))
+    print("PLAYED:")
+    for ctx_config in optimal_ctx_configs:
+        print(f"Aggregated classes: {ctx_config.agg_classes}\tConfiguration: {ctx_config.configuration}")
+    print("REWARDS:")
+    for user_type in range(env.n_user_types):
+        print(f"UserType {user_type}: {optimal_round_data.rewards[user_type]}")
 
 print("\n###################################################")
 
-ucb_rewards = [[] for _ in range(env.n_user_types)]
-ts_rewards = [[] for _ in range(env.n_user_types)]
-optimal_rewards = [[] for _ in range(env.n_user_types)]
+ucb_rewards = [np.zeros(T) for _ in range(env.n_user_types)]
+ts_rewards = [np.zeros(T) for _ in range(env.n_user_types)]
+optimal_rewards = [np.zeros(T) for _ in range(env.n_user_types)]
 
 for user_type in range(env.n_user_types):
     for i in range(T):
         if user_type == 0:
-            ucb_rewards[user_type].extend([ucb_rounds[i].rewards[user_type], ucb_rounds[i].rewards[user_type + 1]])
-            ts_rewards[user_type].extend([ts_rounds[i].rewards[user_type], ts_rounds[i].rewards[user_type + 1]])
-            optimal_rewards[user_type].extend([optimal_rounds[i].rewards[user_type],
-                                               optimal_rounds[i].rewards[user_type + 1]])
+            ucb_rewards[user_type][i] = ucb_rounds[i].rewards[user_type] + ucb_rounds[i].rewards[user_type + 1]
+            ts_rewards[user_type][i] = ts_rounds[i].rewards[user_type] + ts_rounds[i].rewards[user_type + 1]
+            optimal_rewards[user_type][i] =\
+                optimal_rounds[i].rewards[user_type] + optimal_rounds[i].rewards[user_type + 1]
         else:
-            ucb_rewards[user_type].append(ucb_rounds[i].rewards[user_type])
-            ts_rewards[user_type].append(ts_rounds[i].rewards[user_type])
-            optimal_rewards[user_type].append(optimal_rounds[i].rewards[user_type])
+            ucb_rewards[user_type][i] = ucb_rounds[i].rewards[user_type + 1]
+            ts_rewards[user_type][i] = ts_rounds[i].rewards[user_type + 1]
+            optimal_rewards[user_type][i] = optimal_rounds[i].rewards[user_type + 1]
 
-ucb_rewards = np.array(ucb_rewards)
-ts_rewards = np.array(ts_rewards)
-optimal_rewards = np.array(optimal_rewards)
+for user_type in range(env.n_user_types):
 
-for user_type in env.n_user_types:
-    fig = plt.figure(0)
-    fig.add_subplot(1, env.n_user_types, user_type)
+    fig = plt.figure(0, figsize=(13, 12))
+    fig.add_subplot(env.n_user_types, 1, user_type + 1)
     plt.title(f'User Type: {user_type}')
     plt.xlabel("t")
     plt.ylabel("Rewards")
-    ax, = plt.plot(ucb_rewards[user_type], 'g')
+
+    ucb_y = ucb_rewards[user_type]
+    ts_y = ts_rewards[user_type]
+    optimal_y = optimal_rewards[user_type]
+    max_y = max([*ucb_y, *ts_y, *optimal_y])
+
+    ax, = plt.plot(ucb_y, 'g')
     ax.set_label("UCB")
-    ax, = plt.plot(ts_rewards[user_type], 'r')
+    ax, = plt.plot(ts_y, 'r')
     ax.set_label("TS")
-    ax, = plt.plot(optimal_rewards[user_type], 'b--')
+    ax, = plt.plot(optimal_y, 'b--')
     ax.set_label("Optimal")
+
+    plt.vlines(x=ucb_splits, ymin=0, ymax=max_y, color='springgreen', label='UCB Splits')
+    plt.vlines(x=ts_splits, ymin=0, ymax=max_y, color='fuchsia', label='TS Splits', linestyles='dashdot')
     plt.legend()
 
-    plt.figure(1)
-    fig.add_subplot(1, env.n_user_types, user_type)
+    fig = plt.figure(1, figsize=(13, 12))
+    fig.add_subplot(env.n_user_types, 1, user_type + 1)
     plt.title(f'User Type: {user_type}')
     plt.xlabel("t")
     plt.ylabel("Cumulative Rewards")
-    ax, = plt.plot(np.cumsum(ucb_rewards[user_type]), 'g')
+
+    ucb_y = np.cumsum(ucb_rewards[user_type])
+    ts_y = np.cumsum(ts_rewards[user_type])
+    optimal_y = np.cumsum(optimal_rewards[user_type])
+    max_y = max([*ucb_y, *ts_y, *optimal_y])
+
+    ax, = plt.plot(ucb_y, 'g')
     ax.set_label("UCB")
-    ax, = plt.plot(np.cumsum(ts_rewards[user_type]), 'r')
+    ax, = plt.plot(ts_y, 'r')
     ax.set_label("TS")
-    ax, = plt.plot(np.cumsum(optimal_rewards[user_type]), 'b--')
+    ax, = plt.plot(optimal_y, 'b--')
     ax.set_label("Optimal")
+
+    plt.vlines(x=ucb_splits, ymin=0, ymax=max_y, color='springgreen', label='UCB Splits')
+    plt.vlines(x=ts_splits, ymin=0, ymax=max_y, color='fuchsia', label='TS Splits', linestyles='dashdot')
     plt.legend()
 
-    plt.figure(2)
-    fig.add_subplot(1, env.n_user_types, user_type)
+    fig = plt.figure(2, figsize=(13, 12))
+    fig.add_subplot(env.n_user_types, 1, user_type + 1)
     plt.title(f'User Type: {user_type}')
     plt.xlabel("t")
     plt.ylabel("Cumulative Regrets")
-    ax, = plt.plot(np.cumsum(optimal_rewards[user_type] - ucb_rewards[user_type]), 'g')
+
+    ucb_y = np.cumsum(optimal_rewards[user_type] - ucb_rewards[user_type])
+    ts_y = np.cumsum(optimal_rewards[user_type] - ts_rewards[user_type])
+    max_y = max([*ucb_y, *ts_y])
+
+    ax, = plt.plot(ucb_y, 'g')
     ax.set_label("UCB")
-    ax, = plt.plot(np.cumsum(optimal_rewards[user_type] - ts_rewards[user_type]), 'r')
+    ax, = plt.plot(ts_y, 'r')
     ax.set_label("TS")
+
+    plt.vlines(x=ucb_splits, ymin=0, ymax=max_y, color='springgreen', label='UCB Splits')
+    plt.vlines(x=ts_splits, ymin=0, ymax=max_y, color='fuchsia', label='TS Splits', linestyles='dashdot')
     plt.legend()
 
 plt.show()

@@ -14,7 +14,7 @@ ContextConfig = namedtuple('ContextConfig', ['configuration', 'agg_classes'])
 
 class Environment:
     def __init__(self):
-        filepath = '../json/environment.json'
+        filepath = '../json/c_environment.json'
         with open(filepath, 'r', encoding='utf_8') as stream:
             env_features = json.load(stream)
 
@@ -93,10 +93,10 @@ class Environment:
             s = np.random.randint(1, 2**30)
         np.random.seed(s)
 
-        result = RoundData(self.n_products, self.n_features)
+        result = RoundData(self.n_products, self.n_features, self.n_user_types)
         result.ctx_configs = ctx_configs
 
-        daily_users = np.random.randint(500, 1000)
+        daily_users = np.random.randint(3000, 4000)
         alpha_ratios = self.draw_alpha_ratios()
         rewards = np.zeros((self.n_user_types, self.n_products), dtype=int)
 

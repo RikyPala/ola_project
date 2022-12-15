@@ -36,7 +36,7 @@ class Solver:
         return inverse_graph.T
 
     def find_optimal(self):
-        optimal_configurations = np.zeros((self.n_user_types, self.n_products))
+        optimal_configurations = np.zeros((self.n_user_types, self.n_products), dtype=np.int8)
         optimal_rewards = np.zeros(self.n_user_types)
         for user_type in range(self.n_user_types):
             arms_shape = (self.n_arms,) * self.n_products

@@ -104,15 +104,9 @@ optimal_rewards = [np.zeros(T) for _ in range(env.n_user_types)]
 
 for user_type in range(env.n_user_types):
     for i in range(T):
-        if user_type == 0:
-            ucb_rewards[user_type][i] = ucb_rounds[i].rewards[user_type] + ucb_rounds[i].rewards[user_type + 1]
-            ts_rewards[user_type][i] = ts_rounds[i].rewards[user_type] + ts_rounds[i].rewards[user_type + 1]
-            optimal_rewards[user_type][i] =\
-                optimal_rounds[i].rewards[user_type] + optimal_rounds[i].rewards[user_type + 1]
-        else:
-            ucb_rewards[user_type][i] = ucb_rounds[i].rewards[user_type + 1]
-            ts_rewards[user_type][i] = ts_rounds[i].rewards[user_type + 1]
-            optimal_rewards[user_type][i] = optimal_rounds[i].rewards[user_type + 1]
+        ucb_rewards[user_type][i] = ucb_rounds[i].rewards[user_type]
+        ts_rewards[user_type][i] = ts_rounds[i].rewards[user_type]
+        optimal_rewards[user_type][i] = optimal_rounds[i].rewards[user_type]
 
 for user_type in range(env.n_user_types):
 

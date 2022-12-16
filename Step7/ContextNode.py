@@ -27,6 +27,8 @@ class ContextNode:
 
     def split(self):
         splittable_features = self.get_splittable_features()
+        if not splittable_features:
+            return False
         parent_x_ = np.sum(np.mean(self.learner.get_means(), axis=1))
         t = len(RoundsHistory.history)
         best_lower_bound = parent_x_ - (- np.log(self.delta) / (2 * t)) ** 0.5
@@ -48,7 +50,7 @@ class ContextNode:
             left_lower_bound = left_x_ - (- np.log(self.delta) / (2 * t)) ** 0.5
             right_x_ = np.sum(np.mean(right.learner.get_means(), axis=1))
             right_lower_bound = right_x_ - (- np.log(self.delta) / (2 * t)) ** 0.5
-            children_lower_bound = (1-fp[feature-1]) * left_lower_bound + fp[feature-1] * right_lower_bound
+            children_lower_bound = (1 - fp[feature - 1]) * left_lower_bound + fp[feature - 1] * right_lower_bound
             if children_lower_bound >= best_lower_bound:
                 best_lower_bound = children_lower_bound
                 self.left = left

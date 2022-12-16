@@ -35,7 +35,7 @@ class Learner:
         self.alpha_ratios_est = np.full(self.n_products + 1, 1. / (self.n_products + 1))
 
         self.avg_products_sold_data = np.full((self.n_products, self.n_arms, 2), 0)
-        self.avg_products_sold_est = np.full((self.n_products, self.n_arms), np.inf)
+        self.avg_products_sold_est = np.full((self.n_products, self.n_arms), 1)
 
         self.n_simulations = 300
         self.marginal_rewards = np.zeros((env.n_products, env.n_arms))
@@ -144,7 +144,7 @@ class Learner:
             a = self.avg_products_sold_data[prod, configuration[prod], 0]
             b = self.avg_products_sold_data[prod, configuration[prod], 1]
             if b == 0:
-                self.avg_products_sold_est[prod, configuration[prod]] = np.inf
+                self.avg_products_sold_est[prod, configuration[prod]] = 1
             else:
                 self.avg_products_sold_est[prod, configuration[prod]] = a / b
 

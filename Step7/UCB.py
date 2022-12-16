@@ -19,11 +19,10 @@ class UCB(Learner):
     def update(self, round_data: RoundData):
         self.t += 1
         configuration = self.get_configuration_by_agg_classes(round_data.ctx_configs)
+        self.pulled_rounds[np.arange(self.n_products), configuration] += 1
         conversions = np.sum(round_data.conversions[self.agg_classes], axis=0)
         visits = np.sum(round_data.visits[self.agg_classes], axis=0)
-        self.pulled_rounds[np.arange(self.n_products), configuration] += visits != 0
-        conversion_rates = conversions / visits
-        conversion_rates[visits == 0] = 0
+        conversion_rates = np.nan_to_num(conversions / visits, nan=0.5, posinf=0.5)
         idxs = np.arange(self.n_products)
         n_pulls = self.pulled_rounds[idxs, configuration]
         self.empirical_means[idxs, configuration] = \

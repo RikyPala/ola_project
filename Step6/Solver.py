@@ -42,17 +42,17 @@ class Solver:
     def find_optimal(self):
         optimal_configurations = []
         optimal_rewards = []
-        for i in range(self.n_phases):
+        for phase in range(self.n_phases):
             arms_shape = (self.n_arms,) * self.n_products
             expected_reward_per_configuration = np.zeros(arms_shape)
             for configuration, _ in np.ndenumerate(expected_reward_per_configuration):
                 rewards = np.zeros(self.n_products)
                 for start in range(self.n_products):
-                    common_term = self.conversion_rates[i, start, configuration[start]] * \
+                    common_term = self.conversion_rates[phase, start, configuration[start]] * \
                                   self.prices[start, configuration[start]] * \
                                   self.avg_products_sold[start, configuration[start]]
                     rewards[start] = common_term * (self.expected_alpha_ratios[start] +
-                                                    self.compute_children_contribute([start], configuration, i))
+                                                    self.compute_children_contribute([start], configuration, phase))
                 expected_reward_per_configuration[configuration] = np.sum(rewards)
             optimal_configuration = np.unravel_index(np.argmax(expected_reward_per_configuration),
                                                      expected_reward_per_configuration.shape)

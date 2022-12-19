@@ -15,3 +15,12 @@ class RoundsHistory(object):
             RoundsHistory.history[RoundsHistory.TS_index].append(round_data)
         else:
             raise NotImplementedError("Only UCB and TS are valid learner classes")
+
+    @staticmethod
+    def get_number_rounds(learner_class):
+        if learner_class.__name__ == 'UCB':
+            return len(RoundsHistory.history[RoundsHistory.UCB_index])
+        elif learner_class.__name__ == 'TS':
+            return len(RoundsHistory.history[RoundsHistory.TS_index])
+        else:
+            raise NotImplementedError("Only UCB and TS are valid learner classes")

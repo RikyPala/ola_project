@@ -30,7 +30,7 @@ class ContextNode:
         if not splittable_features:
             return False
         parent_x_ = np.sum(np.mean(self.learner.get_means(), axis=1))
-        t = len(RoundsHistory.history)
+        t = RoundsHistory.get_number_rounds(type(self.learner))
         best_lower_bound = parent_x_ - (- np.log(self.delta) / (2 * t)) ** 0.5
         fp = self.feature_probabilities
         for feature in splittable_features:

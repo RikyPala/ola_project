@@ -28,12 +28,6 @@ class NonStationaryEnvironment:
 
         # REWARDS VARIABLES
         self.feature_probabilities = np.array(env_features['feature_probabilities'])
-        """
-        User types:
-            0 -> FALSE *
-            1 -> TRUE FALSE
-            2 -> TRUE TRUE
-        """
         self.user_probabilities = np.array([
             (1 - self.feature_probabilities[0]),
             (self.feature_probabilities[0]) * (1 - self.feature_probabilities[1]),
@@ -48,29 +42,8 @@ class NonStationaryEnvironment:
         self.graph_probabilities = np.array(env_features['graph_probabilities'])
         self.secondaries = np.array(env_features['secondaries'])
 
-    def create_graph_probabilities(self, full_weights: bool = True):
-        low = 0.05 if full_weights else 0.0
-        high = 0.75
-        graph_prob = np.random.uniform(low, high, (self.n_user_types, self.n_products, self.n_products))
-        diag_idx = np.arange(self.n_products)
-        graph_prob[:, diag_idx, diag_idx] = 0
-        return graph_prob
 
     def draw_user_type(self):
-        """
-        Example
-            - feature_1:
-                TRUE -> Young
-                FALSE -> Old
-            - feature_2:
-                TRUE -> Rich
-                FALSE -> Poor
-            - user_type:
-                0 -> Old Rich/Poor
-                1 -> Young Poor
-                2 -> Young Rich
-        :return: user_type
-        """
         feature_1 = np.random.binomial(1, self.feature_probabilities[0])
         feature_2 = np.random.binomial(1, self.feature_probabilities[1])
         if not feature_1:

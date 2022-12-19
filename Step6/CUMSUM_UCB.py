@@ -38,7 +38,7 @@ class CUMSUM_UCB(Learner):
         for prod in range(self.n_products):
             if self.change_detection[prod][pulled_arm[prod]].update(data, pulled_arm[prod]):
                 # If this is True, it means that there was an abrupt change.
-                # Then we finally we reset all the CUMSUM parameters
+                # Then we finally reset all the CUMSUM parameters
                 self.valid_rewards_per_arms[prod][pulled_arm[prod]] = []
                 self.pulled_rounds[prod, pulled_arm[prod]] = 0
                 self.marginal_rewards[prod, pulled_arm[prod]] = 0
@@ -60,7 +60,7 @@ class CUMSUM_UCB(Learner):
             exp_rewards =\
                 (exp_conversion_rates * self.prices * self.avg_products_sold + self.marginal_rewards) * alpha_ratios
             configuration = np.argmax(exp_rewards, axis=1)
-        else:
+        else:  # for exploration
             configuration = np.random.randint(0, self.n_arms, self.n_products)
 
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1

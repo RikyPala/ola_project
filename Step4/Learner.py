@@ -19,6 +19,7 @@ class Learner:
         self.alpha_ratios_data = np.full((self.n_products + 1, 2), 0)
         self.alpha_ratios_est = np.full(self.n_products + 1, 1. / (self.n_products + 1))
 
+        self.initialize = True
         self.avg_products_sold_data = np.full((self.n_products, self.n_arms, 2), 0)
         self.avg_products_sold_est = np.full((self.n_products, self.n_arms), np.inf)
 
@@ -33,6 +34,8 @@ class Learner:
         exp_rewards = alpha_ratios * \
             (exp_conversion_rates * self.prices * self.avg_products_sold_est + self.marginal_rewards)
         configuration = np.argmax(exp_rewards, axis=1)
+        if self.initialize:
+            configuration = np.zeros_like(configuration)
         self.pulled_rounds[np.arange(self.n_products), configuration] += 1
         return configuration
 
@@ -89,15 +92,19 @@ class Learner:
         self.alpha_ratios_est = self.alpha_ratios_data[:, 0] / self.alpha_ratios_data[:, 1]
 
     def update_avg_products_sold(self, configuration, results: RoundData):
+        max_found = 0.
         for prod in range(self.n_products):
-            self.avg_products_sold_data[prod, configuration[prod], 0] += results.sales[prod]
-            self.avg_products_sold_data[prod, configuration[prod], 1] += results.conversions[prod]
-            a = self.avg_products_sold_data[prod, configuration[prod], 0]
-            b = self.avg_products_sold_data[prod, configuration[prod], 1]
-            if b == 0:
-                self.avg_products_sold_est[prod, configuration[prod]] = np.inf
-            else:
-                self.avg_products_sold_est[prod, configuration[prod]] = a / b
+            sales = self.avg_products_sold_data[prod, configuration[prod], 0]
+            conversions = self.avg_products_sold_data[prod, configuration[prod], 1]
+            sales += results.sales[prod]
+            conversions += results.conversions[prod]
+            if conversions > 0:
+                est = sales / conversions
+                self.avg_products_sold_est[prod, configuration[prod]] = est
+                if self.initialize:
+                    max_found = max(max_found, est)
+        if self.initialize:
+            self.avg_products_sold_est = np.clip(self.avg_products_sold_est, None, max_found)
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)
@@ -119,3 +126,5 @@ class Learner:
         self.update_alpha_ratios(results)
         self.update_avg_products_sold(configuration, results)
         self.update_marginal_reward(configuration)
+        if self.initialize:
+            self.initialize = False

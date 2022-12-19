@@ -51,7 +51,7 @@ for i in range(T):
     print("------------------OPTIMAL-------------------")
     print("REWARD: " + str(optimal_round_data.reward))
 
-print("\n###################################################")
+print("\n###################################################\n")
 
 ucb_rewards = []
 ts_rewards = []
@@ -65,6 +65,23 @@ for i in range(T):
 ucb_rewards = np.array(ucb_rewards)
 ts_rewards = np.array(ts_rewards)
 optimal_rewards = np.array(optimal_rewards)
+
+print("--------------------UCB---------------------")
+print("AVERAGE REWARD:")
+print("\t", np.average(ucb_rewards))
+print("\tstd:", np.std(ucb_rewards))
+print("AVERAGE REGRET:")
+print("\t", np.average(optimal_rewards - ucb_rewards))
+print("\tstd:", np.std(optimal_rewards - ucb_rewards))
+
+print("--------------------TS----------------------")
+print("AVERAGE REWARD:")
+print("\t", np.average(ts_rewards))
+print("\tstd:", np.std(ts_rewards))
+print("AVERAGE REGRET:")
+print("\t", np.average(optimal_rewards - ts_rewards))
+print("\tstd:", np.std(optimal_rewards - ts_rewards))
+
 
 plt.figure(0)
 plt.xlabel("t")

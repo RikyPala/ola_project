@@ -12,10 +12,11 @@ solver = Solver(env)
 optimal_configurations, optimal_rewards = solver.find_optimal()
 
 """
-Should be:
-UserType 0:   1, 0, 2, 3, 1  -> FF (class: 0) + FV (class: 1)
-UserType 1:   1, 2, 3, 0, 0  -> VF (class: 2)
-UserType 2:   3, 0, 1, 1, 2  -> VV (class: 3)
+Opt. config should be:
+UserType 0 [FF (class: 0) + FT (class: 1)]:     1, 0, 2, 3, 1
+UserType 1 [TF (class: 2)]:                     1, 2, 3, 0, 0
+UserType 2 [TT (class: 3)]:                     3, 0, 1, 1, 2
+
 """
 
 print("OPTIMAL CONFIGURATION")

@@ -40,20 +40,7 @@ class Environment:
         self.secondaries = np.array(env_features['secondaries'])
 
     def draw_user_type(self):
-        """
-        Example
-            - feature_1:
-                TRUE -> Young
-                FALSE -> Old
-            - feature_2:
-                TRUE -> Rich
-                FALSE -> Poor
-            - user_type:
-                0 -> Old Rich/Poor
-                1 -> Young Poor
-                2 -> Young Rich
-        :return: user_type
-        """
+        # 3 possible user type but 4 possible combinations of features (classes)
         feature_1 = np.random.binomial(1, self.feature_probabilities[0])
         feature_2 = np.random.binomial(1, self.feature_probabilities[1])
         if not feature_1:
@@ -82,7 +69,9 @@ class Environment:
         return alpha_ratios
 
     def get_pulled_arms_by_class_type(self, class_type, ctx_configs):
+        # ctx_configs: list of pulled configurations for each active context
         for ctx_config in ctx_configs:
+            # select the configuration in the context corresponding at the user class type
             if class_type in ctx_config.agg_classes:
                 return ctx_config.configuration
         raise AssertionError('User class not found in the contexts')
@@ -143,6 +132,7 @@ class Environment:
         result.rewards = np.sum(result.prod_rewards, axis=1)
 
         if learner_class is not None:
+            # store results for initializing attributes of children learners
             RoundsHistory.append(result, learner_class)
 
         return result

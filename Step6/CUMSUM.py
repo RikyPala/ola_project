@@ -12,17 +12,18 @@ class CUMSUM:
         self.g_plus = 0  # cumulative positive deviation of an arm until time t
         self.g_minus = 0  # cumulative negative deviation of an arm until time t
 
-    def update(self, data: RoundData, arm):  # sample = sampled mean (expected reward)
+    def update(self, data: RoundData, arm):
         self.t += 1
         if self.t <= self.M:
-            self.reference += (data.conversions[arm] / data.visits[arm]) / self.M
+            self.reference += (data.conversions[arm] / data.visits[arm]) / self.M # warm up to calculate the reference
             return 0
         else:
+            # Positive and negative deviation from the reference point
             s_plus = ((data.conversions[arm] / data.visits[arm]) - self.reference) - self.eps
             s_minus = -((data.conversions[arm] / data.visits[arm]) - self.reference) - self.eps
             self.g_plus = max(0, self.g_plus + s_plus)
             self.g_minus = max(0, self.g_minus + s_minus)
-            return self.g_plus > self.h or self.g_minus > self.h  # se viene superata la soglia mando True
+            return self.g_plus > self.h or self.g_minus > self.h  # True if a change is detected
 
     def reset(self):
         self.t = 0

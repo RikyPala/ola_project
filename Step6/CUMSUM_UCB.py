@@ -7,7 +7,7 @@ from NonStationaryEnvironment import NonStationaryEnvironment, RoundData
 
 class CUMSUM_UCB(Learner):
 
-    def __init__(self, env: NonStationaryEnvironment, M=15, eps=0.05, h=0.15, alpha=0.01):
+    def __init__(self, env: NonStationaryEnvironment, M=15, eps=0.05, h=0.15, alpha=0.001):
         super().__init__(env)
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
         self.empirical_means = np.zeros((self.n_products, self.n_arms))
@@ -37,13 +37,13 @@ class CUMSUM_UCB(Learner):
 
         for prod in range(self.n_products):
             if self.change_detection[prod][pulled_arm[prod]].update(data, pulled_arm[prod]):
-                # If this is okay, it means that there was an abrupt change.
-                # then we detect it, finally we reset all the CUMSUM parameters
+                # If this is True, it means that there was an abrupt change.
+                # Then we finally we reset all the CUMSUM parameters
                 self.valid_rewards_per_arms[prod][pulled_arm[prod]] = []
                 self.pulled_rounds[prod, pulled_arm[prod]] = 0
                 self.marginal_rewards[prod, pulled_arm[prod]] = 0
                 self.change_detection[prod][pulled_arm[prod]].reset()
-
+            # Update of the other variables in any case and upper-bound computation
             self.valid_rewards_per_arms[prod][pulled_arm[prod]].append(data.conversions[prod]/data.visits[prod])
             self.empirical_means[prod, pulled_arm[prod]] = np.mean(self.valid_rewards_per_arms[prod][pulled_arm[prod]])
             total_valid_samples = np.sum(self.pulled_rounds[prod])

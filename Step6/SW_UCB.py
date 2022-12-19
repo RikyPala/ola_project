@@ -5,7 +5,7 @@ from NonStationaryEnvironment import NonStationaryEnvironment, RoundData
 
 class SW_UCB(Learner):
 
-    def __init__(self, env: NonStationaryEnvironment, window_size=30):
+    def __init__(self, env: NonStationaryEnvironment, window_size=31):
         super().__init__(env)
         self.t = 0
         self.confidence = np.ones((self.n_products, self.n_arms)) * np.inf
@@ -38,7 +38,7 @@ class SW_UCB(Learner):
             for arm in range(self.n_arms):
                 n = self.pulled_rounds[prod][arm]
                 self.empirical_means[prod, arm] = np.sum(self.rewards_per_arms[prod][arm][-n:]) / n if n > 0 else 0
-                self.confidence[prod, arm] = self.c * (np.log(self.t) / n) ** 0.5 if n > 0 else np.inf
+                self.confidence[prod, arm] = self.c * (np.log(self.t) / n) ** 0.5 if n > 0 else 1
 
     def sample(self):
         return self.empirical_means + self.confidence

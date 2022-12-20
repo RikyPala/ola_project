@@ -104,7 +104,7 @@ class Learner:
                 if self.initialize:
                     max_found = max(max_found, est)
         if self.initialize:
-            self.avg_products_sold_est = np.clip(self.avg_products_sold_est, None, max_found)
+            self.avg_products_sold_est = np.clip(self.avg_products_sold_est, None, 0.8*max_found)
 
     def update_marginal_reward(self, configuration):
         reaching_probabilities = self.compute_reaching_probabilities(configuration)

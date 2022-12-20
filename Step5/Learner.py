@@ -88,7 +88,7 @@ class Learner:
         self.graph_probabilities_data += results.secondary_visits
         self.graph_probabilities_est = np.divide(
             self.graph_probabilities_data[:, :, 0], self.graph_probabilities_data[:, :, 1],
-            out=np.zeros_like(self.graph_probabilities_est),  # TODO
+            out=np.zeros_like(self.graph_probabilities_est),
             where=self.graph_probabilities_data[:, :, 1] != 0)
 
     def update_marginal_reward(self, configuration):

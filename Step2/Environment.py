@@ -1,16 +1,31 @@
+import json
+
 import numpy as np
+
+
+class RoundData:
+    def __init__(self, n_products):
+        self.configuration = np.zeros(n_products, dtype=int)
+        self.users = 0
+        self.visits = np.zeros(n_products, dtype=int)
+        self.conversions = np.zeros(n_products, dtype=int)
+        self.reward = 0
+        self.sales = np.zeros(n_products, dtype=int)
+        self.prod_rewards = np.zeros(n_products)
 
 
 class Environment:
     def __init__(self):
+        filepath = '../json/environment.json'
+        with open(filepath, 'r', encoding='utf_8') as stream:
+            env_features = json.load(stream)
 
-        self.n_products = 5
-        self.n_arms = 4
-        self.n_user_types = 3
+        self.n_products = env_features['num_products']
+        self.n_arms = env_features['num_arms']
+        self.n_user_types = env_features['num_user_types']
 
         # REWARDS VARIABLES
-
-        self.feature_probabilities = np.array([0.45, 0.65])
+        self.feature_probabilities = np.array(env_features['feature_probabilities'])
         """
         User types:
             0 -> FALSE *
@@ -21,72 +36,15 @@ class Environment:
             (1 - self.feature_probabilities[0]),
             (self.feature_probabilities[0]) * (1 - self.feature_probabilities[1]),
             (self.feature_probabilities[0]) * (self.feature_probabilities[1])])
-
-        self.prices = np.array([15, 30, 45, 60])
-        self.conversion_rates = np.array([
-            [[0.77, 0.72, 0.65, 0.60],
-             [0.80, 0.65, 0.61, 0.55],
-             [0.62, 0.57, 0.49, 0.45],
-             [0.67, 0.62, 0.58, 0.55],
-             [0.55, 0.53, 0.49, 0.40]],
-
-            [[0.81, 0.75, 0.72, 0.68],
-             [0.68, 0.61, 0.57, 0.52],
-             [0.58, 0.45, 0.40, 0.35],
-             [0.77, 0.65, 0.60, 0.57],
-             [0.62, 0.58, 0.54, 0.50]],
-
-            [[0.60, 0.51, 0.48, 0.45],
-             [0.71, 0.68, 0.65, 0.60],
-             [0.81, 0.76, 0.72, 0.68],
-             [0.76, 0.72, 0.69, 0.61],
-             [0.53, 0.42, 0.40, 0.35]]
-        ])
-        self.max_products_sold = np.array([
-            [40, 30, 20],
-            [55, 35, 40],
-            [50, 20, 60],
-            [20, 40, 30],
-            [50, 40, 50]
-        ])
+        self.prices = np.array(env_features['prices'])
+        self.conversion_rates = np.array(env_features['conversion_rates'])
+        self.max_products_sold = np.array(env_features['max_products_sold'])
 
         # GRAPH VARIABLES
-        self.lambda_p = 0.8
-        self.alpha_ratios_parameters = np.array([
-            [[3, 7], [10, 2], [5, 6], [3, 3], [25, 13], [13, 2]],
-            [[13, 15], [12, 20], [8, 6], [9, 3], [10, 12], [10, 3]],
-            [[10, 7], [3, 12], [14, 17], [15, 8], [11, 6], [8, 3]]
-        ])
-        self.graph_probabilities = np.array([
-            [
-                [0, 0.40, 0.35, 0.40, 0.10],
-                [0.30, 0, 0.25, 0.10, 0.15],
-                [0.35, 0.15, 0, 0.20, 0.30],
-                [0.10, 0.05, 0.20, 0, 0.15],
-                [0.10, 0.30, 0.25, 0.10, 0]
-            ],
-            [
-                [0, 0.20, 0.50, 0.15, 0.45],
-                [0.25, 0, 0.30, 0.40, 0.10],
-                [0.45, 0.15, 0, 0.65, 0.15],
-                [0.55, 0.50, 0.35, 0, 0.65],
-                [0.15, 0.60, 0.35, 0.40, 0]
-            ],
-            [
-                [0, 0.25, 0.20, 0.45, 0.15],
-                [0.35, 0, 0.10, 0.55, 0.50],
-                [0.60, 0.45, 0, 0.50, 0.10],
-                [0.15, 0.15, 0.35, 0, 0.10],
-                [0.15, 0.25, 0.10, 0.55, 0]
-            ]
-        ])
-        self.secondaries = np.array([
-            [4, 2],
-            [0, 2],
-            [1, 3],
-            [4, 0],
-            [2, 3]
-        ])
+        self.lambda_p = env_features['lambda']
+        self.alpha_ratios_parameters = np.array(env_features['alpha_ratios_parameters'])
+        self.graph_probabilities = np.array(env_features['graph_probabilities'])
+        self.secondaries = np.array(env_features['secondaries'])
 
     def draw_user_type(self):
         """
@@ -123,14 +81,21 @@ class Environment:
         alpha_ratios = (alpha_ratios.T / norm_factors).T
         return alpha_ratios
 
-    def round(self, pulled_arms):
+    def round(self, pulled_arms, seed=0):
+        s = seed
+        if seed == 0:
+            s = np.random.randint(1, 2**30)
+        np.random.seed(s)
 
-        daily_users = np.random.randint(10, 200)
-        rewards = np.zeros(self.n_products, dtype=int)
+        result = RoundData(self.n_products)
+        result.configuration = pulled_arms
+
+        daily_users = np.random.randint(500, 1000)
+        result.users = daily_users
         alpha_ratios = self.draw_alpha_ratios()
+        rewards = np.zeros(self.n_products, dtype=int)
 
         for _ in range(daily_users):
-
             user_type = self.draw_user_type()
             product = self.draw_starting_page(user_type=user_type, alpha_ratios=alpha_ratios)
             if product == 5:  # competitors' page
@@ -141,15 +106,19 @@ class Environment:
             while to_visit:
                 current_product = to_visit.pop(0)
                 visited.append(current_product)
+                result.visits[current_product] += 1
 
-                product_price = self.prices[pulled_arms[current_product]]
+                product_price = self.prices[current_product, pulled_arms[current_product]]
 
                 buy = np.random.binomial(1, self.conversion_rates[
-                    pulled_arms[current_product], current_product, user_type])
+                    user_type, current_product, pulled_arms[current_product]])
                 if not buy:
                     continue
 
-                products_sold = np.random.randint(0, self.max_products_sold[current_product, user_type])
+                result.conversions[current_product] += 1
+                products_sold = np.random.randint(
+                    1, self.max_products_sold[user_type, current_product, pulled_arms[current_product]] + 1)
+                result.sales[current_product] += products_sold
                 rewards[current_product] += product_price * products_sold
 
                 secondary_1 = self.secondaries[current_product, 0]
@@ -163,4 +132,7 @@ class Environment:
                 if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                     to_visit.append(secondary_2)
 
-        return rewards / daily_users
+        result.prod_rewards = rewards / daily_users
+        result.reward = np.sum(result.prod_rewards)
+
+        return result

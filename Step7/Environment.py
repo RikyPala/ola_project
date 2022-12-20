@@ -136,3 +136,6 @@ class Environment:
             RoundsHistory.append(result, learner_class)
 
         return result
+
+    def clear_history(self):
+        RoundsHistory.clear()

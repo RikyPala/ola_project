@@ -93,7 +93,7 @@ class Learner:
 
     def evaluate_configuration(self, configuration):
 
-        daily_users = 1000
+        daily_users = 10000
         reward = 0
         alpha_ratios = self.draw_alpha_ratios()
 
@@ -110,14 +110,15 @@ class Learner:
                 current_product = to_visit.pop(0)
                 visited.append(current_product)
 
-                product_price = self.prices[configuration[current_product]]
+                product_price = self.prices[current_product, configuration[current_product]]
 
                 buy = np.random.binomial(1, self.conversion_rates[
                     user_type, current_product, configuration[current_product]])
                 if not buy:
                     continue
 
-                products_sold = np.random.randint(0, self.max_products_sold[current_product, user_type])
+                products_sold = np.random.randint(
+                    1, self.max_products_sold[user_type, current_product, configuration[current_product]] + 1)
                 reward += product_price * products_sold
 
                 secondary_1 = self.secondaries[current_product, 0]
@@ -131,7 +132,7 @@ class Learner:
                 if success_2 and secondary_2 not in visited and secondary_2 not in to_visit:
                     to_visit.append(secondary_2)
 
-        return reward
+        return reward / daily_users
 
     """
     def evaluate_configuration2(self, configuration):

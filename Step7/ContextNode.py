@@ -7,7 +7,7 @@ from RoundsHistory import RoundsHistory
 
 class ContextNode:
 
-    def __init__(self, env: Environment, learner_class, feature_1=None, feature_2=None, delta=0.5):
+    def __init__(self, env: Environment, learner_class, feature_1=None, feature_2=None, delta=0.1):
         self.delta = delta
         self.left = None
         self.right = None

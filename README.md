@@ -25,6 +25,7 @@ Assumptions:
 Every day, there is a random number of potential new customers (returning customers are not considered here). In particular, every single customer can land on the webpage in which one of the 5 products is primary or on the webpage of a product sold by a (non-strategic) competitor. Call 𝛼_i the ratio of customers landing on the webpage in which product Pi is primary, and call 𝛼_0 the ratio of customers landing on the webpage of a competitor. In practice, you can only consider the 𝛼 ratios and disregard the total number of users. However, the 𝛼 ratios will be subject to noise. That is, every day, the value of the 𝛼 ratios will be realizations of independent Dirichlet random variables.
 
 The following picture summarizes the overall scenario.
+
 <img src="https://i.ibb.co/YBrQrvK/Picture2.png" alt="Picture2" border="0">
 
 ## Assignment

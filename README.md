@@ -13,7 +13,7 @@ We assume that the user has the following behavior:
 
 ## Example
 
-<img src="https://i.ibb.co/N1FLsth/Picture1.png" alt="Picture1" border="0">
+<img src="https://i.ibb.co/8zmj0N3/Picture1.png" alt="Picture1" border="0">
 
 We are given five products P1, P2, P3, P4, P5, each corresponding to a node of the graph above. Every directed edge between two products is associated with a weight. Given a primary product P and a secondary product P’, the weight of the edge starting from P and ending in P’ provides the probability with which the user clicks on P’ while displayed in the first slot with product P as the main product. For instance, if the primary product is P2 and the secondary products are P1, in the first slot, and P4, in the second slot, the probabilities that the user clicks on P1 and P4 are 0.1 and 0.3 * lambda. The absence of an edge means that the corresponding probability is zero. Consider now another case. When the primary product is P2 and the secondary products are P1 and P4, the user can buy a number of units of P2 and then click on one of both secondary products. Assume, for instance, that the user clicks on P4 and therefore P4 is displayed as the primary product, along with, e.g., P1 and P3 displayed as secondary products. Notice that, from now on, if P2 is displayed as a secondary product, the probability that the user clicks on it is zero independently of the slot in which it is displayed.
 
@@ -25,7 +25,7 @@ Assumptions:
 Every day, there is a random number of potential new customers (returning customers are not considered here). In particular, every single customer can land on the webpage in which one of the 5 products is primary or on the webpage of a product sold by a (non-strategic) competitor. Call 𝛼_i the ratio of customers landing on the webpage in which product Pi is primary, and call 𝛼_0 the ratio of customers landing on the webpage of a competitor. In practice, you can only consider the 𝛼 ratios and disregard the total number of users. However, the 𝛼 ratios will be subject to noise. That is, every day, the value of the 𝛼 ratios will be realizations of independent Dirichlet random variables.
 
 The following picture summarizes the overall scenario.
-<img src="https://i.ibb.co/9HMgMRf/Picture2.png" alt="Picture2" border="0">
+<img src="https://i.ibb.co/YBrQrvK/Picture2.png" alt="Picture2" border="0">
 
 ## Assignment
 

@@ -44,8 +44,3 @@ For simplicity, assume that there are four values of price for every product and
 - **[Step 5](https://github.com/riccardo-pala/OLA-Project/tree/master/Step5)**: *Optimization with uncertain graph weights*. Do the same as Step 3 when the uncertain parameters are the graph weights. Develop the algorithms by Python and evaluate their performance when applied to your simulator.
 - **[Step 6](https://github.com/riccardo-pala/OLA-Project/tree/master/Step6)**: *Non-stationary demand curve*. Now assume that the demand curves could be subjected to abrupt changes. Use a UCB-like approach with a change detection algorithm to face this situation and show whether it works better or worse than using a sliding-window UCB-like algorithm. Develop the algorithms by Python and evaluate their performance when applied to your simulator.
 - **[Step 7](https://github.com/riccardo-pala/OLA-Project/tree/master/Step7)**: *Context generation*. Do the same of Step 4 when the features can be observed by the ecommerce website. For simplicity, run the context-generation algorithms only every 2 weeks. When we have multiple contexts, the prices of each single context can be chosen and thus optimized independently of the others. Develop the algorithms by Python and evaluate their performance when applied to your simulator.
-
-For the Steps 3-7, in the algorithm evaluation, report:
-- the average regret and reward computed over a significant number of runs,
-- their standard deviation, 
-- when theoretical bounds are available, also report the ratio between the empiric regret and the upper bound.
